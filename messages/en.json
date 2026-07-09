@@ -950,6 +950,10 @@
         "deleteError": "Failed to delete",
         "deleted": "Automation deleted"
       }
+    },
+    "edit": {
+      "loadError": "Failed to load automation (Status: {status})",
+      "back": "Back to Automations"
     }
   },
   "Flows": {

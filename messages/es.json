@@ -950,6 +950,10 @@
         "deleteError": "Error al eliminar",
         "deleted": "Automatización eliminada"
       }
+    },
+    "edit": {
+      "loadError": "Error al cargar la automatización (Estado: {status})",
+      "back": "Volver a Automatizaciones"
     }
   },
   "Flows": {
