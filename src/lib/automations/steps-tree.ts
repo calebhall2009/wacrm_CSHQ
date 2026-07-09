@@ -28,17 +28,17 @@ interface InsertRow {
   position: number
 }
 
-const uid = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2) + Date.now().toString(36)
+import { randomUUID } from 'crypto'
+
+const uid = () => randomUUID()
 
 export async function replaceSteps(
   automationId: string,
   input: BuilderStepInput[],
+  client?: any
 ): Promise<string | null> {
-  const admin = supabaseAdmin()
-  const { error: delErr } = await admin
+  const db = client ?? supabaseAdmin()
+  const { error: delErr } = await db
     .from('automation_steps')
     .delete()
     .eq('automation_id', automationId)
@@ -49,6 +49,7 @@ export async function replaceSteps(
 export async function insertSteps(
   automationId: string,
   input: BuilderStepInput[],
+  client?: any
 ): Promise<string | null> {
   if (!input || input.length === 0) return null
 
@@ -83,7 +84,8 @@ export async function insertSteps(
   walk(tree, null, null)
 
   if (rows.length === 0) return null
-  const { error } = await supabaseAdmin().from('automation_steps').insert(rows)
+  const db = client ?? supabaseAdmin()
+  const { error } = await db.from('automation_steps').insert(rows)
   return error?.message ?? null
 }
 

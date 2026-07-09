@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
-import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { getTemplate } from '@/lib/automations/templates'
 import { insertSteps, type BuilderStepInput } from '@/lib/automations/steps-tree'
 import {
@@ -104,8 +103,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const admin = supabaseAdmin()
-  const { data: automation, error: insertErr } = await admin
+  const { data: automation, error: insertErr } = await supabase
     .from('automations')
     .insert({
       user_id: user.id,
@@ -127,7 +125,7 @@ export async function POST(request: Request) {
   }
 
   if (effectiveSteps && effectiveSteps.length > 0) {
-    const err = await insertSteps(automation.id, effectiveSteps)
+    const err = await insertSteps(automation.id, effectiveSteps, supabase)
     if (err) return NextResponse.json({ error: err }, { status: 500 })
   }
 
