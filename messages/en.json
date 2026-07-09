@@ -921,7 +921,7 @@
         "closeConversationHint": "Sets the conversation status to \"closed\". No configuration needed."
       }
     },
-    "page": {
+    "list": {
       "title": "Automations",
       "subtitle": "Create flows that run automatically based on events.",
       "create": "Create automation",

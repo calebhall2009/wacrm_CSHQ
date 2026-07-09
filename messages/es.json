@@ -921,7 +921,7 @@
         "closeConversationHint": "Establece el estado de la conversación como \"cerrado\". No requiere configuración."
       }
     },
-    "page": {
+    "list": {
       "title": "Automatizaciones",
       "subtitle": "Crea flujos que se ejecutan automáticamente basados en eventos.",
       "create": "Crear automatización",
