@@ -834,18 +834,18 @@
         "no": "No"
       },
       "steps": {
-        "sendMessage": "Enviar Mensaje",
-        "sendTemplate": "Enviar Plantilla",
-        "addTag": "Agregar Etiqueta",
-        "removeTag": "Quitar Etiqueta",
-        "assignConversation": "Asignar Conversación",
-        "unassignConversation": "Desasignar Conversación",
-        "closeConversation": "Cerrar Conversación",
-        "setContactField": "Establecer Campo de Contacto",
-        "createDeal": "Crear Trato",
         "wait": "Esperar",
         "condition": "Condición",
-        "webhook": "Webhook"
+        "webhook": "Webhook",
+        "send_message": "Enviar Mensaje",
+        "send_template": "Enviar Plantilla",
+        "add_tag": "Agregar Etiqueta",
+        "remove_tag": "Quitar Etiqueta",
+        "assign_conversation": "Asignar Conversación",
+        "unassign_conversation": "Desasignar Conversación",
+        "close_conversation": "Cerrar Conversación",
+        "set_contact_field": "Establecer Campo de Contacto",
+        "create_deal": "Crear Trato"
       },
       "triggers": {
         "new_message_received": {

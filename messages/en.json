@@ -834,18 +834,18 @@
         "no": "No"
       },
       "steps": {
-        "sendMessage": "Send Message",
-        "sendTemplate": "Send Template",
-        "addTag": "Add Tag",
-        "removeTag": "Remove Tag",
-        "assignConversation": "Assign Conversation",
-        "unassignConversation": "Unassign Conversation",
-        "closeConversation": "Close Conversation",
-        "setContactField": "Set Contact Field",
-        "createDeal": "Create Deal",
         "wait": "Wait",
         "condition": "Condition",
-        "webhook": "Webhook"
+        "webhook": "Webhook",
+        "send_message": "Send Message",
+        "send_template": "Send Template",
+        "add_tag": "Add Tag",
+        "remove_tag": "Remove Tag",
+        "assign_conversation": "Assign Conversation",
+        "unassign_conversation": "Unassign Conversation",
+        "close_conversation": "Close Conversation",
+        "set_contact_field": "Set Contact Field",
+        "create_deal": "Create Deal"
       },
       "triggers": {
         "new_message_received": {
