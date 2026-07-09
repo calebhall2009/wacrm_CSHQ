@@ -845,7 +845,11 @@
         "unassign_conversation": "Unassign Conversation",
         "close_conversation": "Close Conversation",
         "set_contact_field": "Set Contact Field",
-        "create_deal": "Create Deal"
+        "create_deal": "Create Deal",
+        "send_buttons": "Send Buttons",
+        "send_list": "Send List",
+        "update_contact_field": "Update Contact Field",
+        "send_webhook": "Send Webhook"
       },
       "triggers": {
         "new_message_received": {

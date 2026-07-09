@@ -845,7 +845,11 @@
         "unassign_conversation": "Desasignar Conversación",
         "close_conversation": "Cerrar Conversación",
         "set_contact_field": "Establecer Campo de Contacto",
-        "create_deal": "Crear Trato"
+        "create_deal": "Crear Trato",
+        "send_buttons": "Enviar Botones",
+        "send_list": "Enviar Lista",
+        "update_contact_field": "Actualizar Campo de Contacto",
+        "send_webhook": "Enviar Webhook"
       },
       "triggers": {
         "new_message_received": {
