@@ -66,7 +66,7 @@ export const AUTOMATION_TEMPLATES: Record<TemplateSlug, AutomationTemplateDefini
         step_type: 'send_message',
         step_config: {
           text:
-            "¡Gracias por tu mensaje! Nuestro equipo está desconectado en este momento (9am–6pm) y te responderemos a primera hora mañana.",
+            "¡Gracias por tu mensaje! Nuestro equipo está desconectado en este momento (9am-6pm) y te responderemos a primera hora mañana.",
         },
         parent_index: 0,
         branch: 'yes',
@@ -87,7 +87,7 @@ export const AUTOMATION_TEMPLATES: Record<TemplateSlug, AutomationTemplateDefini
         step_type: 'send_message',
         step_config: {
           text:
-            "¡Genial! 🎉 Estaremos encantados de ayudarte. Una pregunta rápida: ¿aproximadamente qué cantidad buscas?",
+            "¡Genial! 📝 Estaremos encantados de ayudarte. Una pregunta rápida: ¿aproximadamente qué cantidad buscas?",
         },
       },
       {

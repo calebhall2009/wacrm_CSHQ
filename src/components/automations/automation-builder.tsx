@@ -701,9 +701,7 @@ export function AutomationBuilder({ initial }: { initial: BuilderInitial }) {
         return
       }
       toast.success(isEditing ? t("toasts.saved") : t("toasts.created"))
-      if (!isEditing && body?.automation?.id) {
-        router.replace(`/automations/${body.automation.id}/edit`)
-      }
+      router.push("/automations")
     } finally {
       setSaving(false)
     }
@@ -1738,3 +1736,4 @@ export function fromServerSteps(nodes: ServerStepNode[]): BuilderStep[] {
         : undefined,
   }))
 }
+
