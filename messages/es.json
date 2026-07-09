@@ -933,7 +933,7 @@
       "emptyTitle": "Aún no hay automatizaciones",
       "emptyDesc": "Crea tu primera automatización para ahorrar tiempo y optimizar tu flujo de trabajo.",
       "deleteTitle": "¿Eliminar automatización?",
-      "deleteDesc": "¿Estás seguro de que quieres eliminar '{name}'? Esta acción no se puede deshacer.",
+      "deleteDesc": "¿Estás seguro de que quieres eliminar \"{name}\"? Esta acción no se puede deshacer.",
       "cancel": "Cancelar",
       "delete": "Eliminar",
       "runs": "{count} ejecución",

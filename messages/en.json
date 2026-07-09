@@ -933,7 +933,7 @@
       "emptyTitle": "No automations yet",
       "emptyDesc": "Create your first automation to save time and streamline your workflow.",
       "deleteTitle": "Delete automation?",
-      "deleteDesc": "Are you sure you want to delete '{name}'? This action cannot be undone.",
+      "deleteDesc": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
       "cancel": "Cancel",
       "delete": "Delete",
       "runs": "{count} run",
