@@ -127,8 +127,9 @@ interface DbStep {
   position: number
 }
 
-export async function loadStepsTree(automationId: string): Promise<BuilderStepNode[]> {
-  const { data, error } = await supabaseAdmin()
+export async function loadStepsTree(automationId: string, client?: any): Promise<BuilderStepNode[]> {
+  const db = client ?? supabaseAdmin()
+  const { data, error } = await db
     .from('automation_steps')
     .select('*')
     .eq('automation_id', automationId)

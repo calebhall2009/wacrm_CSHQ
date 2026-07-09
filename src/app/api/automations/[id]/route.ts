@@ -37,7 +37,7 @@ export async function GET(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!automation) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const steps = await loadStepsTree(id)
+  const steps = await loadStepsTree(id, supabase)
   return NextResponse.json({ automation, steps })
 }
 
