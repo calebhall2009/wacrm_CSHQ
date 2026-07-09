@@ -770,182 +770,133 @@
     }
   },
   "Automations": {
-    "list": {
-      "title": "Automations",
-      "subtitle": "Build workflows that react to WhatsApp® events automatically.",
-      "create": "Create Automation",
-      "retry": "Retry",
-      "templatesTitle": "Quick-start templates",
-      "emptyTitle": "No automations yet",
-      "emptyDesc": "Pick a template above or create one from scratch.",
-      "runs": "{count} run",
-      "runsPlural": "{count} runs",
-      "lastRun": "last {time}",
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "edit": "Edit",
-      "duplicate": "Duplicate",
-      "viewLogs": "View Logs",
-      "delete": "Delete",
-      "cancel": "Cancel",
-      "deleteTitle": "Delete automation",
-      "deleteDesc": "This permanently removes {name} and its execution history. This cannot be undone.",
-      "toasts": {
-        "activated": "Automation activated",
-        "paused": "Automation paused",
-        "duplicated": "Automation duplicated",
-        "deleted": "Automation deleted",
-        "updateError": "Failed to update",
-        "duplicateError": "Failed to duplicate",
-        "deleteError": "Failed to delete"
-      }
-    },
-    "edit": {
-      "loading": "Loading...",
-      "loadError": "Failed to load ({status})",
-      "back": "Back to Automations"
-    },
-    "logs": {
-      "title": "Execution logs",
-      "loadError": "Failed to load logs",
-      "emptyTitle": "No executions yet",
-      "emptyDesc": "Trigger this automation to see runs here.",
-      "unknownContact": "Unknown contact",
-      "step": "{count} step",
-      "stepPlural": "{count} steps",
-      "noSteps": "No steps recorded.",
-      "status": {
-        "success": "success",
-        "partial": "partial",
-        "failed": "failed"
-      },
-      "back": "Back",
-      "backAria": "Back"
-    },
     "builder": {
-      "steps": {
-        "send_message": "Send Message",
-        "send_buttons": "Send Buttons",
-        "send_list": "Send List",
-        "send_template": "Send Template",
-        "add_tag": "Add Tag",
-        "remove_tag": "Remove Tag",
-        "assign_conversation": "Assign Conversation",
-        "update_contact_field": "Update Contact Field",
-        "create_deal": "Create Deal",
-        "wait": "Wait",
-        "condition": "Condition (If/Else)",
-        "send_webhook": "Send Webhook",
-        "close_conversation": "Close Conversation"
-      },
-      "triggers": {
-        "new_message_received": {
-          "label": "New Message Received",
-          "hint": "Any incoming message"
-        },
-        "first_inbound_message": {
-          "label": "First Message from Contact",
-          "hint": "First time this contact ever messages you (works for manually-added contacts too)"
-        },
-        "keyword_match": {
-          "label": "Keyword Match",
-          "hint": "Message contains specific keyword(s)"
-        },
-        "interactive_reply": {
-          "label": "Button / List Reply",
-          "hint": "Customer taps a button or list row whose id matches — chain menus across automations"
-        },
-        "new_contact_created": {
-          "label": "New Contact Created",
-          "hint": "When a contact is auto-created from an incoming message"
-        },
-        "conversation_assigned": {
-          "label": "Conversation Assigned",
-          "hint": "When assigned to an agent"
-        },
-        "tag_added": {
-          "label": "Tag Added",
-          "hint": "When a tag is added to a contact"
-        },
-        "time_based": {
-          "label": "Time-Based",
-          "hint": "On a recurring schedule"
-        }
-      },
-      "trigger": "Trigger",
-      "triggerType": "Trigger type",
-      "keywords": "Keywords",
-      "keywordsHint": "Comma-separated list (e.g. hello, help, buy)",
-      "replyIds": "Reply IDs",
-      "replyIdsHint": "yes, no, more_info",
-      "replyIdsHelp": "Comma-separated button/list-row ids to match, exact. Use the same ids you set on a Send Buttons / Send List step.",
-      "schedule": "Schedule",
-      "scheduleHint": "Cron expression (e.g. 0 9 * * 1-5)",
-      "active": "Active",
-      "activeAria": "Active",
-      "save": "Save",
-      "saveDraft": "Save Draft",
-      "untitled": "Untitled automation",
-      "backToAutomations": "Back to automations",
-      "toasts": {
-        "saved": "Automation saved",
-        "created": "Automation created",
-        "saveFailed": "Save failed"
-      },
       "tags": {
-        "select": "Select a tag…",
-        "placeholder": "Tag id",
-        "unknown": "{id} (unknown tag)"
+        "placeholder": "Select a tag",
+        "select": "Select tag",
+        "unknown": "Unknown tag: {id}"
       },
       "fields": {
         "name": "Name",
         "email": "Email",
         "company": "Company",
-        "customFields": "Custom fields",
-        "unknown": "{id} (unknown field)"
+        "customFields": "Custom Fields",
+        "unknown": "Unknown field: {id}"
       },
       "agents": {
-        "select": "Select an agent…",
-        "placeholder": "Agent id",
-        "unknown": "{id} (unknown agent)"
+        "placeholder": "Select an agent",
+        "select": "Select agent",
+        "unknown": "Unknown agent: {id}"
       },
       "pipelines": {
+        "pipelineIdLabel": "Pipeline ID",
+        "stageIdLabel": "Stage ID",
         "pipelineLabel": "Pipeline",
-        "pipelineIdLabel": "Pipeline id",
+        "selectPipeline": "Select pipeline",
+        "unknownPipeline": "Unknown pipeline: {id}",
         "stageLabel": "Stage",
-        "stageIdLabel": "Stage id",
-        "selectPipeline": "Select a pipeline…",
-        "selectStage": "Select a stage…",
-        "selectPipelineFirst": "Select a pipeline first…",
-        "unknownPipeline": "{id} (unknown pipeline)",
-        "unknownStage": "{id} (unknown stage)"
+        "selectStage": "Select stage",
+        "selectPipelineFirst": "Select a pipeline first",
+        "unknownStage": "Unknown stage: {id}"
       },
       "templates": {
-        "templateLabel": "Template",
-        "templateNameLabel": "Template name",
+        "templateNameLabel": "Template Name",
         "languageLabel": "Language",
-        "select": "Select a template…",
-        "unknown": "{name} ({lang}) — not in approved list",
-        "unknownLang": "unknown"
+        "templateLabel": "Template",
+        "select": "Select template",
+        "unknown": "Unknown template: {name} ({lang})",
+        "unknownLang": "Unknown language"
       },
+      "toasts": {
+        "saveFailed": "Save failed",
+        "saved": "Automation saved",
+        "created": "Automation created"
+      },
+      "backToAutomations": "Back to Automations",
+      "untitled": "Untitled automation",
+      "active": "Active",
+      "activeAria": "Toggle active state",
+      "save": "Save",
+      "saveDraft": "Save Draft",
+      "trigger": "Trigger",
+      "triggerType": "Trigger Type",
+      "schedule": "Schedule",
+      "scheduleHint": "When should this run?",
+      "keywords": "Keywords (comma separated)",
+      "keywordsHint": "pricing, quote, help",
+      "replyIds": "Reply IDs (comma separated)",
+      "replyIdsHint": "btn_yes, btn_no",
+      "replyIdsHelp": "Matches exact button or interactive reply payloads",
+      "delete": "Delete",
+      "addStep": "Add step",
       "branches": {
         "yes": "Yes",
         "no": "No"
       },
-      "addStep": "Add step",
+      "steps": {
+        "sendMessage": "Send Message",
+        "sendTemplate": "Send Template",
+        "addTag": "Add Tag",
+        "removeTag": "Remove Tag",
+        "assignConversation": "Assign Conversation",
+        "unassignConversation": "Unassign Conversation",
+        "closeConversation": "Close Conversation",
+        "setContactField": "Set Contact Field",
+        "createDeal": "Create Deal",
+        "wait": "Wait",
+        "condition": "Condition",
+        "webhook": "Webhook"
+      },
+      "triggers": {
+        "new_message_received": {
+          "label": "New message received",
+          "hint": "Triggers when any inbound message is received."
+        },
+        "keyword_match": {
+          "label": "Keyword match",
+          "hint": "Triggers when message contains specific words."
+        },
+        "interactive_reply": {
+          "label": "Interactive reply",
+          "hint": "Triggers when a specific button/list reply is received."
+        },
+        "tag_added": {
+          "label": "Tag added",
+          "hint": "Triggers when a specific tag is added to a contact."
+        },
+        "conversation_opened": {
+          "label": "Conversation opened",
+          "hint": "Triggers when a conversation starts."
+        },
+        "conversation_closed": {
+          "label": "Conversation closed",
+          "hint": "Triggers when a conversation is closed."
+        },
+        "webhook": {
+          "label": "Incoming Webhook",
+          "hint": "Triggers via external webhook."
+        },
+        "schedule": {
+          "label": "Schedule",
+          "hint": "Runs on a regular schedule."
+        }
+      },
       "config": {
-        "messageText": "Message text",
-        "placeholderMessageText": "Hi! Thanks for reaching out…",
+        "matchType": "Match type",
+        "matchContains": "Contains any",
+        "matchExact": "Exact match",
+        "messageText": "Message Text",
+        "placeholderMessageText": "Type your message here...",
         "tagLabel": "Tag",
-        "modeLabel": "Mode",
+        "modeLabel": "Assignment Mode",
         "modes": {
-          "round_robin": "Round-robin",
-          "specific": "Specific agent"
+          "round_robin": "Round Robin",
+          "specific": "Specific Agent"
         },
         "agentLabel": "Agent",
         "fieldLabel": "Field",
         "valueLabel": "Value",
-        "placeholderValue": "Text or '{{ vars.x }}' / '{{ message.text }}'",
+        "placeholderValue": "New value...",
         "titleLabel": "Title",
         "amountLabel": "Amount",
         "unitLabel": "Unit",
@@ -961,19 +912,43 @@
           "message_content": "Message content",
           "time_of_day": "Time of day"
         },
-        "operandLabel": "Operand",
-        "placeholderTime": "HH:mm-HH:mm",
-        "placeholderContact": "name / email / company",
-        "placeholderTag": "tag id",
-        "urlLabel": "URL",
-        "headersLabel": "Headers",
-        "placeholderHeaders": "{\"Authorization\": \"Bearer ...\"}",
-        "bodyTemplateLabel": "Body template",
-        "placeholderBody": "{\"id\": \"'{{ contact.id }}'\"}",
-        "matchType": "Match type",
-        "matchContains": "Contains",
-        "matchExact": "Exact",
+        "operandLabel": "Condition/Operand",
+        "placeholderTime": "e.g. 09:00",
+        "placeholderContact": "Field value",
+        "placeholderTag": "Tag ID",
+        "urlLabel": "Webhook URL",
+        "bodyTemplateLabel": "Body JSON Template",
         "closeConversationHint": "Sets the conversation status to \"closed\". No configuration needed."
+      }
+    },
+    "page": {
+      "title": "Automations",
+      "subtitle": "Create flows that run automatically based on events.",
+      "create": "Create automation",
+      "templatesTitle": "Templates",
+      "emptyTitle": "No automations yet",
+      "emptyDesc": "Create your first automation to save time and streamline your workflow.",
+      "deleteTitle": "Delete automation?",
+      "deleteDesc": "Are you sure you want to delete '{name}'? This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "runs": "{count} run",
+      "runsPlural": "{count} runs",
+      "lastRun": "Last run: {time}",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "viewLogs": "View logs",
+      "retry": "Retry",
+      "toasts": {
+        "updateError": "Failed to update",
+        "activated": "Automation activated",
+        "paused": "Automation paused",
+        "duplicateError": "Failed to duplicate",
+        "duplicated": "Automation duplicated",
+        "deleteError": "Failed to delete",
+        "deleted": "Automation deleted"
       }
     }
   },
