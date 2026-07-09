@@ -5,7 +5,7 @@ import { engineSendText } from '@/lib/flows/meta-send'
 
 // This endpoint should ideally be protected by a CRON secret in a real production app.
 export async function GET(req: Request) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
