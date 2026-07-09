@@ -112,11 +112,28 @@ export async function dispatchInboundToAiReply(
       knowledge,
     })
 
-    const { text, handoff, usage } = await generateReply({
+    const { text, handoff, scheduleDate, usage } = await generateReply({
       config,
       systemPrompt,
       messages,
     })
+
+    if (scheduleDate) {
+      try {
+        const { error: insertErr } = await db.from('appointments').insert({
+          account_id: accountId,
+          contact_id: contactId,
+          title: 'Cita agendada (IA)',
+          date: new Date(scheduleDate).toISOString(),
+          status: 'confirmed'
+        })
+        if (insertErr) {
+          console.error('[ai auto-reply] failed to schedule appointment:', insertErr)
+        }
+      } catch (e) {
+        console.error('[ai auto-reply] invalid date format from AI:', scheduleDate)
+      }
+    }
 
     // Record token spend on the account's BYO key. Fire-and-forget so it
     // never adds latency to the customer-facing send: `logAiUsage`

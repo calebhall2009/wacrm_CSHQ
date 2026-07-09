@@ -6,7 +6,7 @@
 // whether the account is on OpenAI or Anthropic.
 // ============================================================
 
-export type AiProvider = 'openai' | 'anthropic'
+export type AiProvider = 'openai' | 'anthropic' | 'gemini'
 
 /**
  * Account AI setup, decrypted and ready to use. Produced by
@@ -60,6 +60,8 @@ export interface GenerateResult {
   text: string
   /** True when the model asked to hand off to a human (auto-reply mode). */
   handoff: boolean
+  /** The ISO date string if the model scheduled an appointment. */
+  scheduleDate: string | null
   /** Provider token usage for this call, or null when unavailable. */
   usage: AiUsage | null
 }

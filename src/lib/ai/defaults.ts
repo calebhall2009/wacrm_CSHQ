@@ -11,8 +11,9 @@ import type { AiProvider } from './types'
  * starting point, never a hard allow-list.
  */
 export const AI_PROVIDER_DEFAULT_MODEL: Record<AiProvider, string> = {
-  openai: 'gpt-5.4-mini',
-  anthropic: 'claude-haiku-4-5-20251001',
+  openai: 'gpt-4o-mini',
+  anthropic: 'claude-3-5-haiku-latest',
+  gemini: 'gemini-2.5-flash',
 }
 
 /**
@@ -89,6 +90,15 @@ export function buildSystemPrompt(args: {
           .join('\n\n---\n\n')}`,
     )
   }
+
+  // Inject current datetime and schedule instruction
+  const now = new Date()
+  parts.push(
+    `Today's date and time is: ${now.toLocaleString('es-ES', { timeZone: 'America/Guayaquil' })}. ` +
+    `If the customer explicitly confirms they want to schedule an appointment for a specific date and time, ` +
+    `output a special scheduling command at the end of your reply in this exact format: [SCHEDULE(YYYY-MM-DD HH:MM)]. ` +
+    `For example: "Perfect, your appointment is scheduled. [SCHEDULE(2026-07-15 15:00)]"`
+  )
 
   return parts.join('\n\n')
 }

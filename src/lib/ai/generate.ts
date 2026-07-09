@@ -8,6 +8,7 @@ import {
 import { HANDOFF_SENTINEL, aiRequestTimeoutMs } from './defaults'
 import { generateOpenAi } from './providers/openai'
 import { generateAnthropic } from './providers/anthropic'
+import { generateGemini } from './providers/gemini'
 
 export interface GenerateArgs {
   config: AiConfig
@@ -41,6 +42,9 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
     case 'anthropic':
       result = await generateAnthropic(providerArgs)
       break
+    case 'gemini':
+      result = await generateGemini(providerArgs)
+      break
     default:
       throw new AiError(`Unsupported AI provider: ${config.provider}`, {
         code: 'unsupported_provider',
@@ -63,6 +67,15 @@ export function parseGeneration(
   usage: AiUsage | null = null,
 ): GenerateResult {
   const handoff = raw.includes(HANDOFF_SENTINEL)
-  const text = raw.split(HANDOFF_SENTINEL).join('').trim()
-  return { text, handoff, usage }
+  let text = raw.split(HANDOFF_SENTINEL).join('')
+
+  let scheduleDate: string | null = null
+  const scheduleMatch = text.match(/\[SCHEDULE\((.*?)\)\]/i)
+  if (scheduleMatch) {
+    scheduleDate = scheduleMatch[1].trim()
+    text = text.replace(scheduleMatch[0], '')
+  }
+
+  text = text.trim()
+  return { text, handoff, scheduleDate, usage }
 }
