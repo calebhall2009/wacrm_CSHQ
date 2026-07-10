@@ -1603,6 +1603,7 @@
       "title": "Configuración del agente",
       "description": "Configura el comportamiento y las instrucciones de tu asistente de Inteligencia Artificial para que atienda a tus clientes de forma automática.",
       "adminOnlyConfig": "Only admins and owners can change the AI configuration.",
+      "loading": "Cargando...",
       "loadFailed": "Failed to load AI configuration",
       "providerAndKey": "Proveedor y clave",
       "encryptionNotice": "Tu clave se encripta en reposo (AES-256-GCM) y nunca se muestra de nuevo después de guardarla.",

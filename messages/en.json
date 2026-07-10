@@ -1602,6 +1602,7 @@
       "title": "Agent setup",
       "description": "Configure the behavior and instructions of your AI assistant to handle your customers automatically.",
       "adminOnlyConfig": "Only admins and owners can change the AI configuration.",
+      "loading": "Loading...",
       "loadFailed": "Failed to load AI configuration",
       "providerAndKey": "Provider & key",
       "encryptionNotice": "Your key is encrypted at rest (AES-256-GCM) and never shown again after saving.",
