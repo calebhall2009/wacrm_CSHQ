@@ -1601,7 +1601,7 @@
     },
     "aiConfig": {
       "title": "Configuración del agente",
-      "description": "Trae tu propia clave de OpenAI o Anthropic. wacrm llama al proveedor directamente con tu clave - sin tarifas por asiento de IA, y tus datos siguen siendo tuyos. Esto potencia los borradores de IA en la bandeja de entrada, el bot de respuesta automática y el Patio de juegos.",
+      "description": "Configura el comportamiento y las instrucciones de tu asistente de Inteligencia Artificial para que atienda a tus clientes de forma automática.",
       "adminOnlyConfig": "Only admins and owners can change the AI configuration.",
       "loadFailed": "Failed to load AI configuration",
       "providerAndKey": "Proveedor y clave",
