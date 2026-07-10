@@ -73,7 +73,7 @@ function LoginPageInner() {
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="items-center text-center">
           <div className="mb-6 flex items-center justify-center overflow-visible h-32">
-            <img src="/logo.png" alt="HallTech Logo" className="h-full w-auto object-contain scale-[2.5]" />
+            <img src="/logo.png" alt="Ecuasapp Logo" className="h-20 w-auto object-contain" />
           </div>
           <CardTitle className="text-xl text-foreground">
             {inviteToken ? t('titleAccept') : t('titleWelcome')}
