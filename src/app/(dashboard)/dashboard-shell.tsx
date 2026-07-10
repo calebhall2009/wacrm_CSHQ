@@ -36,8 +36,6 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
 
     if (!account.onboarding_completed && pathname !== "/onboarding") {
       router.push("/onboarding");
-    } else if (account.onboarding_completed && pathname === "/onboarding") {
-      router.push("/dashboard");
     }
   }, [loading, profileLoading, user, account, pathname, router]);
 

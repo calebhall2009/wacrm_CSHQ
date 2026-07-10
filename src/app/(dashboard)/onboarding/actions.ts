@@ -79,7 +79,6 @@ export async function submitOnboarding(data: {
       business_description: data.description,
       primary_use_case: data.useCase,
       team_size: data.teamSize,
-      onboarding_completed: true,
     })
     .eq("id", accountId);
 
@@ -103,9 +102,20 @@ export async function submitOnboarding(data: {
       }, { onConflict: "account_id" });
       
     if (aiErr) {
-        console.error("Error creating AI prompt:", aiErr);
+      console.error("Error creating AI prompt:", aiErr);
+      return { error: `Failed to create AI agent: ${aiErr.message}` };
     }
   }
+
+  // Complete onboarding only after the optional agent was created. This
+  // keeps the user in the wizard if the agent setup failed instead of
+  // silently sending them to an empty dashboard.
+  const { error: completionErr } = await supabase
+    .from("accounts")
+    .update({ onboarding_completed: true })
+    .eq("id", accountId);
+
+  if (completionErr) return { error: completionErr.message };
 
   return { success: true };
 }
