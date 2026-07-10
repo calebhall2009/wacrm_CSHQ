@@ -141,6 +141,9 @@ export async function POST(request: Request) {
       } catch {
         return bad('Stored API key could not be decrypted — re-enter your key.')
       }
+    } else if (process.env.GROQ_API_KEY) {
+      // Si estamos centralizados y no hay key, usamos una dummy que no se valida
+      apiKeyPlain = process.env.GROQ_API_KEY
     } else {
       return bad('api_key is required')
     }
@@ -197,7 +200,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const encryptedKey = rawKey ? encrypt(rawKey) : null
+    const encryptedKey = rawKey ? encrypt(rawKey) : (process.env.GROQ_API_KEY && !existing ? encrypt('centralized') : null)
     const shared: Record<string, unknown> = {
       provider,
       model,

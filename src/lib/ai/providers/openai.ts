@@ -8,7 +8,8 @@ import {
   type ProviderArgs,
 } from './shared'
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+const DEFAULT_OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 interface OpenAiResponse {
   choices?: { message?: { content?: string } }[]
@@ -27,16 +28,21 @@ interface OpenAiResponse {
 export async function generateOpenAi(args: ProviderArgs): Promise<ProviderResult> {
   const { apiKey, model, systemPrompt, messages, timeoutMs } = args
 
+  const isGroq = process.env.GROQ_API_KEY || model.includes('llama3') || model.includes('llama-3') || model.includes('mixtral')
+  const endpointUrl = isGroq ? GROQ_URL : DEFAULT_OPENAI_URL
+  const finalApiKey = isGroq && process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY : apiKey
+  const finalModel = isGroq && !model.includes('llama') ? 'llama-3.1-8b-instant' : model
+
   let res: Response
   try {
-    res = await fetch(OPENAI_URL, {
+    res = await fetch(endpointUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${finalApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model,
+        model: finalModel,
         messages: [
           { role: 'system', content: systemPrompt },
           ...mergeConsecutive(messages),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Clock, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -28,6 +28,8 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newTime, setNewTime] = useState("");
+  
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchAppointments = async (year: number, month: number) => {
     setIsLoading(true)
@@ -90,6 +92,22 @@ export default function CalendarPage() {
     setIsAddModalOpen(false);
     setNewTitle("");
     setNewTime("");
+  };
+
+  const handleDeleteAppointment = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/appointments?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setAppointments(appointments.filter(app => app.id !== id));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const openAddModal = (date?: Date) => {
@@ -228,14 +246,29 @@ export default function CalendarPage() {
             ) : (
               <div className="flex flex-col gap-2">
                 {selectedDateApps.map(app => (
-                  <div key={app.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                    <div className="bg-primary/10 text-primary p-2 rounded-md">
-                      <Clock className="h-4 w-4" />
+                  <div key={app.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30 group transition-colors hover:bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 text-primary p-2 rounded-md">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{app.title}</p>
+                        <p className="text-xs text-muted-foreground">{app.time}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{app.title}</p>
-                      <p className="text-xs text-muted-foreground">{app.time}</p>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteAppointment(app.id)}
+                      disabled={deletingId === app.id}
+                    >
+                      {deletingId === app.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                 ))}
               </div>

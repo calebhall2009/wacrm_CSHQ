@@ -1412,7 +1412,7 @@
       "notConnected": "Not Connected",
       "connectedDesc": "Your access token authenticates with Meta. See Registration status below for whether webhooks are actually wired.",
       "notConnectedDesc": "Configure your Meta API credentials below to connect your WhatsApp Business account.",
-      "registered": "Registered — Meta will deliver events to wacrm",
+      "registered": "Registered - Meta will deliver events to wacrm",
       "notRegistered": "Not registered — Meta will not deliver events",
       "verifyWithMeta": "Verify with Meta",
       "subscribedSince": "Subscribed since {date}. Click Verify with Meta if events stop arriving.",
@@ -1436,7 +1436,7 @@
       "twoStepPin": "Two-step verification PIN",
       "optional": "(optional)",
       "pinPlaceholder": "6-digit PIN from Meta WhatsApp Manager",
-      "pinHint": "Needed only to wire inbound messages for a production number. Set it in Meta Business Manager → WhatsApp Accounts → Phone Numbers → Two-step verification, then paste it here so wacrm can subscribe the number — otherwise Meta routes inbound events to whichever app last claimed it (the symptom that hits second numbers under a shared WABA). Meta test numbers have no PIN and are pre-registered — leave this blank for them. Leaving it blank also keeps an existing registration untouched.",
+      "pinHint": "Needed only to wire inbound messages for a production number. Set it in Meta Business Manager > WhatsApp Accounts > Phone Numbers > Two-step verification, then paste it here so wacrm can subscribe the number - otherwise Meta routes inbound events to whichever app last claimed it (the symptom that hits second numbers under a shared WABA). Meta test numbers have no PIN and are pre-registered - leave this blank for them. Leaving it blank also keeps an existing registration untouched.",
       "webhookTitle": "Webhook Configuration",
       "webhookDesc": "Use this URL as your webhook callback in the Meta App Dashboard.",
       "webhookUrl": "Webhook Callback URL",
@@ -1601,7 +1601,7 @@
     },
     "aiConfig": {
       "title": "Configuración del agente",
-      "description": "Trae tu propia clave de OpenAI o Anthropic. wacrm llama al proveedor directamente con tu clave — sin tarifas por asiento de IA, y tus datos siguen siendo tuyos. Esto potencia los borradores de IA en la bandeja de entrada, el bot de respuesta automática y el Patio de juegos.",
+      "description": "Trae tu propia clave de OpenAI o Anthropic. wacrm llama al proveedor directamente con tu clave - sin tarifas por asiento de IA, y tus datos siguen siendo tuyos. Esto potencia los borradores de IA en la bandeja de entrada, el bot de respuesta automática y el Patio de juegos.",
       "adminOnlyConfig": "Only admins and owners can change the AI configuration.",
       "loadFailed": "Failed to load AI configuration",
       "providerAndKey": "Proveedor y clave",
@@ -1680,5 +1680,15 @@
       "emptyTitle": "Aún no hay uso de IA en los últimos 30 días.",
       "emptyDesc": "Esto se llena a medida que el asistente hace borradores y responde automáticamente."
     }
+  },
+  "roles": {
+    "admin": "Administrador",
+    "adminHint": "Administra miembros y todo lo demás",
+    "agent": "Agente",
+    "agentHint": "Usa funciones; sin acceso a ajustes",
+    "viewer": "Lector",
+    "viewerHint": "Solo lectura en toda la app",
+    "owner": "Propietario",
+    "ownerHint": "Control total de la cuenta y pagos"
   }
 }

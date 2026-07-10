@@ -62,9 +62,9 @@ function LoginPageInner() {
     }
 
     if (inviteToken) {
-      router.push(`/join/${encodeURIComponent(inviteToken)}`);
+      window.location.href = `/join/${encodeURIComponent(inviteToken)}`;
     } else {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   };
 
@@ -72,12 +72,8 @@ function LoginPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-            {inviteToken ? (
-              <UsersRound className="h-6 w-6 text-primary" />
-            ) : (
-              <MessageSquare className="h-6 w-6 text-primary" />
-            )}
+          <div className="mb-6 flex items-center justify-center overflow-visible h-32">
+            <img src="/logo.png" alt="HallTech Logo" className="h-full w-auto object-contain scale-[2.5]" />
           </div>
           <CardTitle className="text-xl text-foreground">
             {inviteToken ? t('titleAccept') : t('titleWelcome')}

@@ -36,11 +36,13 @@ import { ActivityFeed } from '@/components/dashboard/activity-feed'
 
 import { useTranslations } from 'next-intl'
 
+import { PlanWidget } from '@/components/dashboard/plan-widget'
+
 type RangeDays = 7 | 30 | 90
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard.page')
-  const { defaultCurrency } = useAuth()
+  const { defaultCurrency, profile } = useAuth()
   const [metrics, setMetrics] = useState<MetricsBundle | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
 
@@ -122,14 +124,18 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('description')}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-foreground">
+          Hola {profile?.full_name?.split(' ')[0] || 'Usuario'} 👋
+        </h1>
+        <p className="text-muted-foreground">
+          Aquí está el resumen de tu actividad de hoy.
         </p>
       </div>
+
+      <PlanWidget />
 
       {/* Metric cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -49,8 +49,8 @@ export async function loadAiConfig(
   if (requireActive && !row.is_active) return null
   // Defensive: the column is NOT NULL, but a partial write / manual DB
   // edit could leave it empty. Treat a missing key as "not configured"
-  // rather than letting decrypt() throw on null.
-  if (!row.api_key) return null
+  // rather than letting decrypt() throw on null, unless a global GROQ key is set.
+  if (!row.api_key && !process.env.GROQ_API_KEY) return null
 
   // The embeddings key is optional and independent of the chat key —
   // a corrupt/undecryptable one should downgrade to lexical KB, not
@@ -72,7 +72,7 @@ export async function loadAiConfig(
   return {
     provider: row.provider,
     model: row.model,
-    apiKey: decrypt(row.api_key),
+    apiKey: row.api_key ? decrypt(row.api_key) : process.env.GROQ_API_KEY || '',
     systemPrompt: row.system_prompt,
     isActive: row.is_active,
     autoReplyEnabled: row.auto_reply_enabled,
