@@ -9,7 +9,7 @@ export function Footer() {
           {/* Logo & Description */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 relative h-16 w-full overflow-hidden">
-              <img src="/logo.png" alt="Ecuasapp Logo" className="absolute top-1/2 left-0 -translate-y-1/2 w-48 object-contain filter brightness-0 invert" />
+              <img src="/logo.png" alt="Ecuasapp Logo" className="absolute top-1/2 left-0 -translate-y-1/2 w-24 object-contain filter brightness-0 invert" />
             </div>
             <p className="text-sm mt-2">
               Infraestructura de automatización white label para agencias y consultores.
