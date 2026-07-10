@@ -72,7 +72,11 @@ export async function loadAiConfig(
   return {
     provider: row.provider,
     model: row.model,
-    apiKey: row.api_key ? decrypt(row.api_key) : process.env.GROQ_API_KEY || '',
+    apiKey: row.api_key 
+      ? (decrypt(row.api_key) === 'centralized' 
+          ? (process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY || '') 
+          : decrypt(row.api_key)) 
+      : (process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY || ''),
     systemPrompt: row.system_prompt,
     isActive: row.is_active,
     autoReplyEnabled: row.auto_reply_enabled,
