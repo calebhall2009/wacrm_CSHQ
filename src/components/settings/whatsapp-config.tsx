@@ -273,7 +273,7 @@ export function WhatsAppConfig() {
         extras: {
           setup: {},
           featureType: '',
-          sessionInfoVersion: '3',
+          sessionInfoVersion: '2',
         },
       },
     );
