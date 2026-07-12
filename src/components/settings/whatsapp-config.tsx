@@ -103,19 +103,24 @@ export function WhatsAppConfig() {
       setFbSdkLoaded(true);
     };
 
+    // Don't add the script if it's already in the DOM
+    if (document.getElementById('facebook-jssdk')) {
+      return;
+    }
+
     // Load the SDK script
     const script = document.createElement('script');
     script.id = 'facebook-jssdk';
     script.src = 'https://connect.facebook.net/en_US/sdk.js';
     script.async = true;
     script.defer = true;
-    script.crossOrigin = 'anonymous';
-    document.body.appendChild(script);
+    script.onerror = () => {
+      console.error('Failed to load Facebook SDK');
+    };
+    document.head.appendChild(script);
 
     return () => {
-      // Cleanup on unmount
-      const existing = document.getElementById('facebook-jssdk');
-      if (existing) existing.remove();
+      // Don't remove the script on unmount — FB SDK is a singleton
     };
   }, []);
 
