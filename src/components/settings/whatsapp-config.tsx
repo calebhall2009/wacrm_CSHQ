@@ -213,7 +213,7 @@ export function WhatsAppConfig() {
     }
 
     window.FB.login(
-      async (response: FBLoginResponse) => {
+      (response: FBLoginResponse) => {
         if (!response.authResponse?.code) {
           setConnecting(false);
           if (response.status === 'unknown') {
@@ -226,46 +226,45 @@ export function WhatsAppConfig() {
 
         const code = response.authResponse.code;
 
-        try {
-          // Send the code to our backend
-          const res = await fetch('/api/whatsapp/embedded-signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            toast.error(data.error || 'Failed to connect WhatsApp');
-            setConnecting(false);
-            return;
-          }
-
-          if (data.success) {
-            const name = data.phone_info?.verified_name || data.phone_info?.display_phone_number;
-            toast.success(
-              name
-                ? `✅ WhatsApp connected — ${name}`
-                : '✅ WhatsApp connected successfully!',
-            );
-
-            if (data.registration_error) {
-              toast.warning(
-                `Note: Phone registration had an issue: ${data.registration_error}. Messages may still work.`,
-                { duration: 8000 },
-              );
+        // Handle the async work outside the sync callback
+        fetch('/api/whatsapp/embedded-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        })
+          .then((res) => res.json().then((data) => ({ res, data })))
+          .then(({ res, data }) => {
+            if (!res.ok) {
+              toast.error(data.error || 'Failed to connect WhatsApp');
+              setConnecting(false);
+              return;
             }
 
-            // Refresh config state
-            if (accountId) await fetchConfig(accountId);
-          }
-        } catch (err) {
-          console.error('Embedded signup error:', err);
-          toast.error('An unexpected error occurred during setup.');
-        } finally {
-          setConnecting(false);
-        }
+            if (data.success) {
+              const name = data.phone_info?.verified_name || data.phone_info?.display_phone_number;
+              toast.success(
+                name
+                  ? `✅ WhatsApp connected — ${name}`
+                  : '✅ WhatsApp connected successfully!',
+              );
+
+              if (data.registration_error) {
+                toast.warning(
+                  `Note: Phone registration had an issue: ${data.registration_error}. Messages may still work.`,
+                  { duration: 8000 },
+                );
+              }
+
+              // Refresh config state
+              if (accountId) fetchConfig(accountId);
+            }
+            setConnecting(false);
+          })
+          .catch((err) => {
+            console.error('Embedded signup error:', err);
+            toast.error('An unexpected error occurred during setup.');
+            setConnecting(false);
+          });
       },
       {
         config_id: configId,
