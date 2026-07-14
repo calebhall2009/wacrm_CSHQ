@@ -234,6 +234,7 @@ export async function POST(request: Request) {
       .from('whatsapp_config')
       .select('account_id')
       .eq('phone_number_id', phone_number_id)
+      .neq('phone_number_id', 'twilio_temp_id') // Skip uniqueness check for Twilio placeholder
       .neq('account_id', accountId)
       .maybeSingle()
 
@@ -327,7 +328,7 @@ export async function POST(request: Request) {
     // is not a failure, just an incomplete-but-valid save.
     let registrationSkipped = false
 
-    const needsRegistration = !sameNumber || (typeof pin === 'string' && pin.length > 0)
+    const needsRegistration = provider === 'meta' && (!sameNumber || (typeof pin === 'string' && pin.length > 0))
     if (needsRegistration) {
       if (!pin) {
         // No PIN provided. Meta TEST numbers (Developer Console) are
@@ -365,7 +366,7 @@ export async function POST(request: Request) {
     // Skipped only when there's no waba_id (legacy rows from before
     // we required it).
     let subscribedAppsAt: string | null = null
-    if (waba_id) {
+    if (provider === 'meta' && waba_id) {
       try {
         await subscribeWabaToApp({
           wabaId: waba_id,
