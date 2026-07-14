@@ -63,11 +63,15 @@ export function WhatsAppConfig() {
   // again and overwrites whatever the user typed but hadn't saved yet.
   const loadedAccountIdRef = useRef<string | null>(null);
 
+  const [provider, setProvider] = useState<'meta' | 'twilio'>('meta');
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [wabaId, setWabaId] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [verifyToken, setVerifyToken] = useState('');
   const [pin, setPin] = useState('');
+  const [twilioAccountSid, setTwilioAccountSid] = useState('');
+  const [twilioAuthToken, setTwilioAuthToken] = useState('');
+  const [twilioPhoneNumber, setTwilioPhoneNumber] = useState('');
   const [tokenEdited, setTokenEdited] = useState(false);
 
   // True once /register has succeeded on Meta's side (timestamp set
@@ -115,19 +119,27 @@ export function WhatsAppConfig() {
 
       if (data) {
         setConfig(data);
+        setProvider(data.provider || 'meta');
         setPhoneNumberId(data.phone_number_id || '');
         setWabaId(data.waba_id || '');
         setAccessToken(MASKED_TOKEN);
         setVerifyToken('');
         setPin('');
+        setTwilioAccountSid(data.twilio_account_sid || '');
+        setTwilioAuthToken(data.twilio_auth_token ? MASKED_TOKEN : '');
+        setTwilioPhoneNumber(data.twilio_phone_number || '');
         setTokenEdited(false);
       } else {
         setConfig(null);
+        setProvider('meta');
         setPhoneNumberId('');
         setWabaId('');
         setAccessToken('');
         setVerifyToken('');
         setPin('');
+        setTwilioAccountSid('');
+        setTwilioAuthToken('');
+        setTwilioPhoneNumber('');
         setTokenEdited(false);
       }
       // Clear any stale probe result when reloading the row.
@@ -200,22 +212,26 @@ export function WhatsAppConfig() {
       // and writing direct to Supabase stores the token in plaintext,
       // which then fails decryption on every subsequent health check.
       const payload: Record<string, unknown> = {
-        phone_number_id: phoneNumberId.trim(),
+        provider,
+        phone_number_id: provider === 'meta' ? phoneNumberId.trim() : 'twilio_temp_id', // Twilio uses phone number, we use phone_number_id generically
         waba_id: wabaId.trim() || null,
         verify_token: verifyToken.trim() || null,
-        // Optional — only sent when the user filled it in. The server
-        // requires it on first save or when changing numbers; for a
-        // simple token rotation, leaving it blank skips re-register.
         pin: pin.trim() || null,
+        twilio_account_sid: twilioAccountSid.trim() || null,
+        twilio_phone_number: twilioPhoneNumber.trim() || null,
       };
 
-      if (tokenEdited && accessToken !== MASKED_TOKEN && accessToken.trim()) {
+      // Handle Twilio auth token
+      if (provider === 'twilio' && tokenEdited && twilioAuthToken !== MASKED_TOKEN && twilioAuthToken.trim()) {
+        payload.twilio_auth_token = twilioAuthToken.trim();
+      } else if (provider === 'twilio' && config && !tokenEdited) {
+        // Keeping existing token, handled backend
+      }
+
+      // Handle Meta access token
+      if (provider === 'meta' && tokenEdited && accessToken !== MASKED_TOKEN && accessToken.trim()) {
         payload.access_token = accessToken.trim();
-      } else if (config) {
-        // Existing config — reuse stored encrypted token by decrypting on the
-        // server. But our POST handler requires an access_token to verify
-        // with Meta. If the user didn't change the token, we need to signal
-        // that. Simplest: require token re-entry if they're updating.
+      } else if (provider === 'meta' && config && tokenEdited) {
         toast.error('Please re-enter the Access Token to save changes');
         setSaving(false);
         return;
@@ -563,7 +579,29 @@ export function WhatsAppConfig() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            
+            <div className="flex gap-4 p-1 bg-muted rounded-md mb-6 w-fit">
+              <button
+                onClick={() => setProvider('meta')}
+                className={`px-4 py-2 text-sm font-medium rounded-sm transition-all ${
+                  provider === 'meta' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Meta Cloud API
+              </button>
+              <button
+                onClick={() => setProvider('twilio')}
+                className={`px-4 py-2 text-sm font-medium rounded-sm transition-all ${
+                  provider === 'twilio' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Twilio (Sandbox)
+              </button>
+            </div>
+
+            {provider === 'meta' ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
               <Label className="text-muted-foreground">{t('phoneNumberId')}</Label>
               <Input
                 placeholder="e.g. 100234567890123"
@@ -650,6 +688,63 @@ export function WhatsAppConfig() {
                 <span dangerouslySetInnerHTML={{ __html: t('pinHint') }} />
               </p>
             </div>
+            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Twilio Phone Number</Label>
+                  <Input
+                    placeholder="e.g. +14155238886"
+                    value={twilioPhoneNumber}
+                    onChange={(e) => setTwilioPhoneNumber(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground">The Twilio Sandbox or assigned number.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Twilio Account SID</Label>
+                  <Input
+                    placeholder="e.g. ACxxxxxxxxxxxxxxxxxxxxxx"
+                    value={twilioAccountSid}
+                    onChange={(e) => setTwilioAccountSid(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Twilio Auth Token</Label>
+                  <div className="relative">
+                    <Input
+                      type={showToken ? 'text' : 'password'}
+                      placeholder="Auth Token"
+                      value={twilioAuthToken}
+                      onChange={(e) => {
+                        setTwilioAuthToken(e.target.value);
+                        setTokenEdited(true);
+                      }}
+                      onFocus={() => {
+                        if (twilioAuthToken === MASKED_TOKEN) {
+                          setTwilioAuthToken('');
+                          setTokenEdited(true);
+                        }
+                      }}
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowToken(!showToken)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
+                  {config && !tokenEdited && provider === 'twilio' && (
+                    <p className="text-xs text-muted-foreground">
+                      Token is hidden for security. Enter a new one to update.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

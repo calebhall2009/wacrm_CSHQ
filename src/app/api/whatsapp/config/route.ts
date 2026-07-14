@@ -87,7 +87,7 @@ export async function GET() {
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token, status')
+      .select('provider, phone_number_id, access_token, twilio_auth_token, status')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -112,9 +112,15 @@ export async function GET() {
 
     // Try to decrypt the stored token with the current ENCRYPTION_KEY.
     // If this fails, the key changed (or was never consistent across envs).
-    let accessToken: string
+    let accessToken: string | undefined
+    let twilioAuthToken: string | undefined
     try {
-      accessToken = decrypt(config.access_token)
+      if (config.access_token) {
+        accessToken = decrypt(config.access_token)
+      }
+      if (config.twilio_auth_token) {
+        twilioAuthToken = decrypt(config.twilio_auth_token)
+      }
     } catch (err) {
       console.error('[whatsapp/config GET] Token decryption failed:', err)
       return NextResponse.json(
@@ -129,11 +135,18 @@ export async function GET() {
       )
     }
 
+    if (config.provider === 'twilio') {
+      return NextResponse.json({
+        connected: true,
+        phone_info: { display_phone_number: 'Twilio Sandbox', id: config.phone_number_id },
+      })
+    }
+
     // Validate credentials against Meta
     try {
       const phoneInfo = await verifyPhoneNumber({
         phoneNumberId: config.phone_number_id,
-        accessToken,
+        accessToken: accessToken!,
       })
       return NextResponse.json({ connected: true, phone_info: phoneInfo })
     } catch (err) {
@@ -185,11 +198,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { phone_number_id, waba_id, access_token, verify_token, pin } = body
+    const { provider = 'meta', phone_number_id, waba_id, access_token, verify_token, pin, twilio_account_sid, twilio_auth_token, twilio_phone_number } = body
 
-    if (!access_token || !phone_number_id) {
+    if (provider === 'meta' && (!access_token || !phone_number_id)) {
       return NextResponse.json(
         { error: 'access_token and phone_number_id are required' },
+        { status: 400 }
+      )
+    }
+    
+    if (provider === 'twilio' && (!twilio_account_sid || !twilio_auth_token || !twilio_phone_number)) {
+      return NextResponse.json(
+        { error: 'Twilio Account SID, Auth Token, and Phone Number are required' },
         { status: 400 }
       )
     }
@@ -237,26 +257,37 @@ export async function POST(request: Request) {
 
     // Verify credentials with Meta BEFORE saving
     let phoneInfo
-    try {
-      phoneInfo = await verifyPhoneNumber({
-        phoneNumberId: phone_number_id,
-        accessToken: access_token,
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown Meta API error'
-      console.error('Meta API verification failed during save:', message)
-      return NextResponse.json(
-        { error: `Meta API error: ${message}` },
-        { status: 400 }
-      )
+    if (provider === 'meta') {
+      try {
+        phoneInfo = await verifyPhoneNumber({
+          phoneNumberId: phone_number_id,
+          accessToken: access_token,
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown Meta API error'
+        console.error('Meta API verification failed during save:', message)
+        return NextResponse.json(
+          { error: `Meta API error: ${message}` },
+          { status: 400 }
+        )
+      }
     }
 
     // Encrypt sensitive tokens before storing
-    let encryptedAccessToken: string
-    let encryptedVerifyToken: string | null
+    let encryptedAccessToken: string | undefined = undefined
+    let encryptedVerifyToken: string | null = null
+    let encryptedTwilioAuthToken: string | undefined = undefined
+
     try {
-      encryptedAccessToken = encrypt(access_token)
-      encryptedVerifyToken = verify_token ? encrypt(verify_token) : null
+      if (access_token) {
+        encryptedAccessToken = encrypt(access_token)
+      }
+      if (verify_token) {
+        encryptedVerifyToken = encrypt(verify_token)
+      }
+      if (twilio_auth_token) {
+        encryptedTwilioAuthToken = encrypt(twilio_auth_token)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown encryption error'
       console.error('Encryption failed:', message)
@@ -354,9 +385,9 @@ export async function POST(request: Request) {
     // store the credentials and the error so the UI can guide the
     // user through a retry.
     const baseRow = {
+      provider,
       phone_number_id,
       waba_id: waba_id || null,
-      access_token: encryptedAccessToken,
       verify_token: encryptedVerifyToken,
       status: registrationError ? 'disconnected' : 'connected',
       connected_at: registrationError ? null : new Date().toISOString(),
@@ -364,6 +395,10 @@ export async function POST(request: Request) {
       subscribed_apps_at: subscribedAppsAt ?? null,
       last_registration_error: registrationError,
       updated_at: new Date().toISOString(),
+      ...(encryptedAccessToken && { access_token: encryptedAccessToken }),
+      ...(twilio_account_sid && { twilio_account_sid }),
+      ...(encryptedTwilioAuthToken && { twilio_auth_token: encryptedTwilioAuthToken }),
+      ...(twilio_phone_number && { twilio_phone_number }),
     }
 
     if (existing) {

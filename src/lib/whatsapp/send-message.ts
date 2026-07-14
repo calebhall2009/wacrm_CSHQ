@@ -25,10 +25,10 @@ import {
   sendTextMessage,
   sendTemplateMessage,
   sendMediaMessage,
-  sendInteractiveButtons,
   sendInteractiveList,
   type MediaKind,
 } from '@/lib/whatsapp/meta-api';
+import * as TwilioAPI from '@/lib/whatsapp/twilio-api';
 import {
   validateInteractivePayload,
   interactivePayloadPreviewText,
@@ -330,6 +330,35 @@ export async function sendMessageToConversation(
   }
 
   const attempt = async (phone: string): Promise<string> => {
+    if (config.provider === 'twilio') {
+      const twilioArgs = {
+        twilioAccountSid: config.twilio_account_sid,
+        twilioAuthToken: decrypt(config.twilio_auth_token),
+        twilioPhoneNumber: config.twilio_phone_number,
+        to: phone,
+      };
+      if (messageType === 'template') {
+        return await TwilioAPI.sendTemplateMessage();
+      }
+      if (isMediaKind) {
+        const result = await TwilioAPI.sendMediaMessage({
+          ...twilioArgs,
+          mediaUrl: mediaUrl!,
+          caption: contentText || undefined,
+          mimeType: undefined, // Let Twilio guess
+        });
+        return result.messageId;
+      }
+      if (messageType === 'interactive') {
+        return await TwilioAPI.sendInteractiveButtons();
+      }
+      const result = await TwilioAPI.sendTextMessage({
+        ...twilioArgs,
+        text: contentText!,
+      });
+      return result.messageId;
+    }
+
     if (messageType === 'template') {
       const result = await sendTemplateMessage({
         phoneNumberId: config.phone_number_id,
@@ -338,7 +367,7 @@ export async function sendMessageToConversation(
         templateName: templateName!,
         language: templateLanguage || 'en_US',
         template: templateRow ?? undefined,
-        messageParams: templateMessageParams ?? undefined,
+        messageParams: templateMessageParams as MessageTemplate['components'],
         params: templateParams || [],
         contextMessageId,
       });
