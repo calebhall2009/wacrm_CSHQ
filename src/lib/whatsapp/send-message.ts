@@ -25,6 +25,7 @@ import {
   sendTextMessage,
   sendTemplateMessage,
   sendMediaMessage,
+  sendInteractiveButtons,
   sendInteractiveList,
   type MediaKind,
 } from '@/lib/whatsapp/meta-api';
