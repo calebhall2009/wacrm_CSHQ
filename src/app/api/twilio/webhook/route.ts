@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     // 1. Find the whatsapp_config matching the twilio_account_sid
     const { data: config, error: configError } = await supabaseAdmin
       .from('whatsapp_config')
-      .select('account_id')
+      .select('account_id, user_id')
       .eq('twilio_account_sid', accountSid)
       .eq('provider', 'twilio')
       .maybeSingle();
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         .from('contacts')
         .insert({
           account_id: accountId,
+          user_id: config.user_id,
           phone: fromPhone,
           name: fromPhone,
         })
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
         .from('conversations')
         .insert({
           account_id: accountId,
+          user_id: config.user_id,
           contact_id: contact.id,
           status: 'open',
           unread_count: 0,
