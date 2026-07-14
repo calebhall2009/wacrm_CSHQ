@@ -273,10 +273,6 @@ export interface WhatsAppConfig {
   waba_id?: string;
   access_token: string;
   verify_token?: string;
-  provider: 'meta' | 'twilio';
-  twilio_account_sid?: string;
-  twilio_auth_token?: string;
-  twilio_phone_number?: string;
   status: 'connected' | 'disconnected';
   connected_at?: string;
   /**
