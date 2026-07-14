@@ -195,13 +195,24 @@ export function WhatsAppConfig() {
   }, [authLoading, profileLoading, user?.id, accountId, fetchConfig]);
 
   async function handleSave() {
-    if (!phoneNumberId.trim()) {
-      toast.error('Phone Number ID is required');
-      return;
-    }
-    if (!config && (!accessToken.trim() || !tokenEdited)) {
-      toast.error('Access Token is required for initial setup');
-      return;
+    if (provider === 'meta') {
+      if (!phoneNumberId.trim()) {
+        toast.error('Phone Number ID is required');
+        return;
+      }
+      if (!config && (!accessToken.trim() || !tokenEdited)) {
+        toast.error('Access Token is required for initial setup');
+        return;
+      }
+    } else if (provider === 'twilio') {
+      if (!twilioAccountSid.trim() || !twilioPhoneNumber.trim()) {
+        toast.error('Account SID and Phone Number are required');
+        return;
+      }
+      if (!config && (!twilioAuthToken.trim() || !tokenEdited)) {
+        toast.error('Auth Token is required for initial setup');
+        return;
+      }
     }
 
     try {
