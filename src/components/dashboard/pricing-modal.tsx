@@ -9,53 +9,45 @@ const WHATSAPP_NUMBER = "593980000000"; // Reemplaza con tu número de WhatsApp
 
 const plans = [
   {
-    name: "Básico",
-    price: "$99",
-    description: "Ideal para comenzar a automatizar tu WhatsApp",
+    name: "Emprendedor",
+    price: "$79.99",
+    description: "Para negocios con flujo diario pero aún pequeños.",
     features: [
-      "1 agente de IA",
+      "2 Agentes de IA",
       "150 conversaciones por mes",
-      "Integración bases de datos (Excel / Sheets)",
-      "WhatsApp API oficial",
-      "Métricas básicas",
-      "Soporte estándar"
+      "Límite Meta: 7,500 conversaciones",
+      "Envíos masivos estándar",
+      "Respuestas rápidas guardadas"
     ],
     buttonText: "Empezar ahora",
     popular: false
   },
   {
-    name: "Profesional",
-    price: "$249",
-    description: "Para negocios que venden y hacen seguimiento diario",
+    name: "Emprendedor Plus",
+    price: "$149.99",
+    description: "Para negocios que venden y hacen seguimiento diario.",
     features: [
-      "Todo lo incluido en Básico",
-      "3 agentes de IA",
-      "1.500 conversaciones por mes",
-      "Conexiones según agentes",
-      "Seguimiento automático de leads",
-      "Integraciones ilimitadas (Sheets, Calendar, WooCommerce)",
-      "Envíos masivos oficiales Meta API",
-      "Acompañamiento 1 a 1 en creación",
-      "Soporte prioritario"
+      "Múltiples agentes de IA avanzados",
+      "1,500 conversaciones por mes",
+      "Límite Meta: 7,500 conversaciones",
+      "Calendario propio y entrenamiento de IA (sube PDFs o fotos)",
+      "Soporte prioritario vía WhatsApp"
     ],
     buttonText: "Empezar ahora",
     popular: true
   },
   {
-    name: "Premium",
-    price: "$499",
-    description: "Para equipos de ventas y negocios en crecimiento",
+    name: "Enterprise",
+    price: "$299.99",
+    description: "Para empresas con altos volúmenes de ventas o equipos.",
     features: [
-      "Todo lo incluido en Profesional",
-      "10 agentes de IA",
-      "5.000 conversaciones por mes",
-      "Conexiones según agentes",
-      "Llamadas semanales de soporte",
-      "Métricas empresariales",
-      "Flujos de automatización avanzados",
-      "Análisis de rendimiento personalizado"
+      "Agentes de IA ilimitados",
+      "5,000 conversaciones por mes",
+      "Límite Meta: 7,500 - 30,000+",
+      "Acompañamiento 1 a 1",
+      "Integraciones personalizadas premium"
     ],
-    buttonText: "Empezar ahora",
+    buttonText: "Contactar a ventas",
     popular: false
   }
 ];

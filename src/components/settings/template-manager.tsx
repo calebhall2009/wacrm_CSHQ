@@ -295,7 +295,11 @@ export function TemplateManager() {
       setEditingId(null);
     } catch (err) {
       console.error('Submit error:', err);
-      toast.error(err instanceof Error ? err.message : t('toastSubmitFailed'));
+      let errMsg = err instanceof Error ? err.message : t('toastSubmitFailed');
+      if (errMsg === 'Template name must use only lowercase letters, digits, and underscores (1-512 chars).') {
+        errMsg = t('toastNameInvalid');
+      }
+      toast.error(errMsg);
     } finally {
       setSubmitting(false);
     }
