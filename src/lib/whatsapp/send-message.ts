@@ -28,6 +28,7 @@ import {
   sendInteractiveList,
   type MediaKind,
 } from '@/lib/whatsapp/meta-api';
+import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder';
 import * as TwilioAPI from '@/lib/whatsapp/twilio-api';
 import {
   validateInteractivePayload,
@@ -369,7 +370,7 @@ export async function sendMessageToConversation(
         templateName: templateName!,
         language: templateLanguage || 'en_US',
         template: templateRow ?? undefined,
-        messageParams: templateMessageParams as MessageTemplate['components'],
+        messageParams: templateMessageParams as SendTimeParams | undefined,
         params: templateParams || [],
         contextMessageId,
       });
