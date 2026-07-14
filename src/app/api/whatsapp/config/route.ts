@@ -282,6 +282,8 @@ export async function POST(request: Request) {
     try {
       if (access_token) {
         encryptedAccessToken = encrypt(access_token)
+      } else if (provider === 'twilio') {
+        encryptedAccessToken = encrypt('twilio_not_used')
       }
       if (verify_token) {
         encryptedVerifyToken = encrypt(verify_token)
