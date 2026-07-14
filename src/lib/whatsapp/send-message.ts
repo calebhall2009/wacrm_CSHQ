@@ -338,7 +338,8 @@ export async function sendMessageToConversation(
         to: phone,
       };
       if (messageType === 'template') {
-        return await TwilioAPI.sendTemplateMessage();
+        const result = await TwilioAPI.sendTemplateMessage();
+        return result.messageId;
       }
       if (isMediaKind) {
         const result = await TwilioAPI.sendMediaMessage({
@@ -350,7 +351,8 @@ export async function sendMessageToConversation(
         return result.messageId;
       }
       if (messageType === 'interactive') {
-        return await TwilioAPI.sendInteractiveButtons();
+        const result = await TwilioAPI.sendInteractiveButtons();
+        return result.messageId;
       }
       const result = await TwilioAPI.sendTextMessage({
         ...twilioArgs,
