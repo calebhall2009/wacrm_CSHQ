@@ -102,16 +102,14 @@ export async function POST(req: Request) {
     const { error: messageInsertError } = await supabaseAdmin
       .from('messages')
       .insert({
-        account_id: accountId,
         conversation_id: conversation.id,
-        contact_id: contact.id,
-        direction: 'inbound',
+        sender_type: 'customer',
+        sender_id: contact.id,
         status: 'delivered',
-        message_type: messageType,
+        content_type: messageType,
         content_text: body,
         media_url: mediaUrl0 || null,
         message_id: messageSid,
-        sender_phone: fromPhone,
       });
 
     if (messageInsertError) {
