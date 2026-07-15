@@ -140,9 +140,16 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
     throw new Error('WhatsApp not configured for this account')
   }
 
-  const accessToken = decrypt(config.access_token)
-
   const attempt = async (phone: string): Promise<string> => {
+    if (config.provider === 'telegram') {
+      const { sendTelegramMessage } = await import('@/lib/telegram/telegram-api')
+      const telegramToken = decrypt(config.telegram_bot_token || '')
+      const result = await sendTelegramMessage(telegramToken, phone, input.kind === 'text' ? input.text : '[Template/Interactive not supported on Telegram yet]')
+      return result.messageId
+    }
+
+    const accessToken = decrypt(config.access_token)
+
     if (input.kind === 'template') {
       const r = await sendTemplateMessage({
         phoneNumberId: config.phone_number_id,

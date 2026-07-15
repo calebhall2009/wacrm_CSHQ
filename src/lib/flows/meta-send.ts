@@ -91,9 +91,15 @@ export async function engineSendText(
     throw new Error('WhatsApp not configured for this account')
   }
 
-  const accessToken = decrypt(config.access_token)
-
   const attempt = async (phone: string): Promise<string> => {
+    if (config.provider === 'telegram') {
+      const { sendTelegramMessage } = await import('@/lib/telegram/telegram-api')
+      const telegramToken = decrypt(config.telegram_bot_token || '')
+      const result = await sendTelegramMessage(telegramToken, phone, args.text)
+      return result.messageId
+    }
+
+    const accessToken = decrypt(config.access_token)
     const r = await sendTextMessage({
       phoneNumberId: config.phone_number_id,
       accessToken,
