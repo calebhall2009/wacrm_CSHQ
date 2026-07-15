@@ -1,7 +1,10 @@
-import { NextResponse, after } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { findExistingContact } from '@/lib/contacts/dedupe'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
+import { runAutomationsForTrigger } from '@/lib/automations/engine'
+import { dispatchInboundToFlows } from '@/lib/flows/engine'
+import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 
 let _adminClient: any = null
 function supabaseAdmin() {
@@ -145,4 +148,32 @@ async function processTelegramWebhook(update: any) {
     message_type: 'text',
     message_text: text,
   })
+
+  // 1. Flows (Highest priority)
+  const flowResult = await dispatchInboundToFlows({
+    accountId,
+    userId: userId,
+    conversationId: conversation.id,
+    contactId: contactRecord.id,
+    inboundText: text,
+  }).catch((err) => {
+    console.error('[telegram flows] dispatch failed:', err)
+    return { consumed: false }
+  })
+  const flowConsumed = flowResult?.consumed ?? false
+
+  // 2. Automations
+  await runAutomationsForTrigger(accountId, 'message_received', {
+    contact_id: contactRecord.id,
+    message_type: 'text',
+    message_text: text,
+  }).catch((err) => console.error('[telegram automations] dispatch failed:', err))
+
+  // 3. AI auto-reply (Runs if flows didn't consume the message)
+  if (!flowConsumed && text.trim()) {
+    await dispatchInboundToAiReply({
+      accountId,
+      conversationId: conversation.id,
+    }).catch((err) => console.error('[telegram ai] dispatch failed:', err))
+  }
 }
