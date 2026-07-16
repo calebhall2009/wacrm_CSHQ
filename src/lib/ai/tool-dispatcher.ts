@@ -41,7 +41,33 @@ export async function dispatchToolCall(
       }
 
       case 'book_appointment': {
-        const { title, start_time, end_time, notes } = args
+        const { title, start_time, notes } = args
+        let { end_time } = args
+        
+        // Default end time to 1 hour after start if missing
+        if (!end_time) {
+          const start = new Date(start_time)
+          start.setHours(start.getHours() + 1)
+          end_time = start.toISOString()
+        }
+
+        // Check for conflicts
+        const { data: conflicts, error: conflictErr } = await db
+          .from('appointments')
+          .select('id')
+          .eq('account_id', accountId)
+          .lt('start_time', end_time)
+          .gt('end_time', start_time)
+          .limit(1)
+
+        if (conflictErr) {
+          return JSON.stringify({ error: `Failed to check conflicts: ${conflictErr.message}` })
+        }
+
+        if (conflicts && conflicts.length > 0) {
+          return JSON.stringify({ error: `Conflict: The time slot from ${start_time} to ${end_time} is already booked. Please ask the user for a different time.` })
+        }
+
         // Fetch contact to get name and phone
         const { data: contact } = await db
           .from('contacts')
