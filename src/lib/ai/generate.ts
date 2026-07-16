@@ -56,10 +56,32 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
   }
 
   const parsed = parseGeneration(result.text, result.usage)
-  return {
-    ...parsed,
-    tool_calls: result.tool_calls,
-  }
+    let tool_calls = result.tool_calls || []
+
+    // Parse hallucinated or synthetic [BOOK_APPPOINTMENT={...}] syntax
+    const bookMatch = parsed.text.match(/\[BOOK_APPPOINTMENT=(.*?)\]/i)
+    if (bookMatch) {
+      try {
+        const argsStr = bookMatch[1].trim()
+        JSON.parse(argsStr) // validate json
+        tool_calls.push({
+          id: `call_${Date.now()}`,
+          type: 'function',
+          function: {
+            name: 'book_appointment',
+            arguments: argsStr
+          }
+        })
+        parsed.text = parsed.text.replace(bookMatch[0], '').trim()
+      } catch (err) {
+        console.warn('Failed to parse synthetic BOOK_APPPOINTMENT json:', err)
+      }
+    }
+
+    return {
+      ...parsed,
+      tool_calls,
+    }
 }
 
 /**
