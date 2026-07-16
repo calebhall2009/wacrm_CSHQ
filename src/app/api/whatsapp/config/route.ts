@@ -444,7 +444,7 @@ export async function POST(request: Request) {
     // After saving, if it is Telegram, automatically register the webhook
     if (provider === 'telegram' && telegram_bot_token) {
       try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://wacrm.vercel.app';
+        const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://wacrm.vercel.app';
         const webhookUrl = `${appUrl}/api/telegram/webhook`;
         
         const response = await fetch(`https://api.telegram.org/bot${telegram_bot_token}/setWebhook`, {
