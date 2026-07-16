@@ -59,7 +59,7 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
     let tool_calls = result.tool_calls || []
 
     // Parse hallucinated or synthetic [TOOL_NAME={...}] syntax
-    const syntheticRegex = /\[([A-Z_]+)\s*=\s*(.*?)\]/gi
+    const syntheticRegex = /\[([A-Z_]+)\s*=\s*([\s\S]*?)\]/gi
     let match
     while ((match = syntheticRegex.exec(parsed.text)) !== null) {
       try {
