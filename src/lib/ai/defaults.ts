@@ -95,9 +95,10 @@ export function buildSystemPrompt(args: {
   const now = new Date()
   parts.push(
     `La fecha y hora de hoy es: ${now.toLocaleString('es-ES', { timeZone: 'America/Guayaquil' })}. ` +
-    `Si el cliente confirma explícitamente que quiere programar una cita para una fecha y hora específicas, ` +
-    `emite un comando de programación especial al final de tu respuesta en este formato exacto: [SCHEDULE(YYYY-MM-DD HH:MM)]. ` +
-    `Por ejemplo: "Perfecto, tu cita está agendada. [SCHEDULE(2026-07-15 15:00)]"`
+    `IMPORTANTE: Para ejecutar acciones reales en el sistema (como agendar reservas, chequear disponibilidad, actualizar datos), ` +
+    `DEBES emitir un comando al final de tu mensaje usando EXACTAMENTE este formato: [NOMBRE_DE_HERRAMIENTA={"argumento":"valor"}]. ` +
+    `Por ejemplo, para agendar una cita NUNCA digas "está confirmada" sin incluir al final: [BOOK_APPPOINTMENT={"title":"Reserva","start_time":"2026-07-20T18:00:00Z","end_time":"2026-07-20T19:00:00Z"}] ` +
+    `Si no incluyes los corchetes con el JSON, la acción NO se guardará en la base de datos.`
   )
 
   return parts.join('\n\n')
