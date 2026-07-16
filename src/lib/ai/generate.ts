@@ -58,23 +58,25 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
   const parsed = parseGeneration(result.text, result.usage)
     let tool_calls = result.tool_calls || []
 
-    // Parse hallucinated or synthetic [BOOK_APPPOINTMENT={...}] syntax
-    const bookMatch = parsed.text.match(/\[BOOK_APPPOINTMENT=(.*?)\]/i)
-    if (bookMatch) {
+    // Parse hallucinated or synthetic [TOOL_NAME={...}] syntax
+    const syntheticRegex = /\[([A-Z_]+)=(.*?)\]/gi
+    let match
+    while ((match = syntheticRegex.exec(parsed.text)) !== null) {
       try {
-        const argsStr = bookMatch[1].trim()
+        const toolName = match[1].toLowerCase()
+        const argsStr = match[2].trim()
         JSON.parse(argsStr) // validate json
         tool_calls.push({
-          id: `call_${Date.now()}`,
+          id: `call_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           type: 'function',
           function: {
-            name: 'book_appointment',
+            name: toolName,
             arguments: argsStr
           }
         })
-        parsed.text = parsed.text.replace(bookMatch[0], '').trim()
+        parsed.text = parsed.text.replace(match[0], '').trim()
       } catch (err) {
-        console.warn('Failed to parse synthetic BOOK_APPPOINTMENT json:', err)
+        console.warn(`Failed to parse synthetic ${match[1]} json:`, err)
       }
     }
 
