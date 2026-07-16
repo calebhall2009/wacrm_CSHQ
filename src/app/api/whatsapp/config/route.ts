@@ -87,7 +87,7 @@ export async function GET() {
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token, status')
+      .select('phone_number_id, access_token, status, provider')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -127,6 +127,13 @@ export async function GET() {
         },
         { status: 200 }
       )
+    }
+
+    if (config.provider === 'telegram') {
+      return NextResponse.json({
+        connected: true,
+        phone_info: { display_phone_number: 'Telegram Bot', id: config.phone_number_id },
+      })
     }
 
     // Validate credentials against Meta
@@ -185,11 +192,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { phone_number_id, waba_id, access_token, verify_token, pin } = body
+    const { provider = 'meta', phone_number_id, waba_id, access_token, verify_token, pin, telegram_bot_token } = body
 
-    if (!access_token || !phone_number_id) {
+    if (provider === 'meta' && (!access_token || !phone_number_id)) {
       return NextResponse.json(
         { error: 'access_token and phone_number_id are required' },
+        { status: 400 }
+      )
+    }
+
+    if (provider === 'telegram' && !telegram_bot_token) {
+      return NextResponse.json(
+        { error: 'telegram_bot_token is required' },
         { status: 400 }
       )
     }
@@ -214,6 +228,7 @@ export async function POST(request: Request) {
       .from('whatsapp_config')
       .select('account_id')
       .eq('phone_number_id', phone_number_id)
+      .neq('phone_number_id', 'telegram_temp_id') // Skip uniqueness check for Telegram placeholder
       .neq('account_id', accountId)
       .maybeSingle()
 
@@ -237,26 +252,36 @@ export async function POST(request: Request) {
 
     // Verify credentials with Meta BEFORE saving
     let phoneInfo
-    try {
-      phoneInfo = await verifyPhoneNumber({
-        phoneNumberId: phone_number_id,
-        accessToken: access_token,
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown Meta API error'
-      console.error('Meta API verification failed during save:', message)
-      return NextResponse.json(
-        { error: `Meta API error: ${message}` },
-        { status: 400 }
-      )
+    if (provider === 'meta') {
+      try {
+        phoneInfo = await verifyPhoneNumber({
+          phoneNumberId: phone_number_id,
+          accessToken: access_token,
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown Meta API error'
+        console.error('Meta API verification failed during save:', message)
+        return NextResponse.json(
+          { error: `Meta API error: ${message}` },
+          { status: 400 }
+        )
+      }
     }
 
     // Encrypt sensitive tokens before storing
-    let encryptedAccessToken: string
-    let encryptedVerifyToken: string | null
+    let encryptedAccessToken: string | undefined = undefined
+    let encryptedVerifyToken: string | null = null
+    let encryptedTelegramToken: string | undefined = undefined
     try {
-      encryptedAccessToken = encrypt(access_token)
-      encryptedVerifyToken = verify_token ? encrypt(verify_token) : null
+      if (access_token) {
+        encryptedAccessToken = encrypt(access_token)
+      }
+      if (verify_token) {
+        encryptedVerifyToken = encrypt(verify_token)
+      }
+      if (telegram_bot_token) {
+        encryptedTelegramToken = encrypt(telegram_bot_token)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown encryption error'
       console.error('Encryption failed:', message)
@@ -296,7 +321,7 @@ export async function POST(request: Request) {
     // is not a failure, just an incomplete-but-valid save.
     let registrationSkipped = false
 
-    const needsRegistration = !sameNumber || (typeof pin === 'string' && pin.length > 0)
+    const needsRegistration = provider === 'meta' && (!sameNumber || (typeof pin === 'string' && pin.length > 0))
     if (needsRegistration) {
       if (!pin) {
         // No PIN provided. Meta TEST numbers (Developer Console) are
@@ -334,7 +359,7 @@ export async function POST(request: Request) {
     // Skipped only when there's no waba_id (legacy rows from before
     // we required it).
     let subscribedAppsAt: string | null = null
-    if (waba_id) {
+    if (provider === 'meta' && waba_id) {
       try {
         await subscribeWabaToApp({
           wabaId: waba_id,
@@ -354,9 +379,9 @@ export async function POST(request: Request) {
     // store the credentials and the error so the UI can guide the
     // user through a retry.
     const baseRow = {
+      provider,
       phone_number_id,
       waba_id: waba_id || null,
-      access_token: encryptedAccessToken,
       verify_token: encryptedVerifyToken,
       status: registrationError ? 'disconnected' : 'connected',
       connected_at: registrationError ? null : new Date().toISOString(),
@@ -364,6 +389,8 @@ export async function POST(request: Request) {
       subscribed_apps_at: subscribedAppsAt ?? null,
       last_registration_error: registrationError,
       updated_at: new Date().toISOString(),
+      ...(encryptedAccessToken && { access_token: encryptedAccessToken }),
+      ...(encryptedTelegramToken && { telegram_bot_token: encryptedTelegramToken }),
     }
 
     if (existing) {
@@ -414,14 +441,30 @@ export async function POST(request: Request) {
       })
     }
 
+    // After saving, if it is Telegram, automatically register the webhook
+    if (provider === 'telegram' && telegram_bot_token) {
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://wacrm.vercel.app';
+        const webhookUrl = `${appUrl}/api/telegram/webhook`;
+        
+        const response = await fetch(`https://api.telegram.org/bot${telegram_bot_token}/setWebhook`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: webhookUrl })
+        });
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Failed to set Telegram webhook:', result);
+        }
+      } catch (err) {
+        console.error('Error setting Telegram webhook:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       saved: true,
-      registered: registeredAt != null,
-      // Credentials are valid and saved, but inbound webhook
-      // registration was skipped because no PIN was supplied (e.g. a
-      // Meta test number). The UI shows the "Not registered" banner
-      // rather than claiming the number is fully live.
+      registered: registeredAt != null || provider === 'telegram',
       registration_skipped: registrationSkipped,
       phone_info: phoneInfo,
     })

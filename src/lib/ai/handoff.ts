@@ -23,21 +23,26 @@ export function buildHandoffSummary(args: {
 }): string {
   const { messages, replyCount } = args
 
-  const lastCustomer = [...messages]
-    .reverse()
-    .find((m) => m.role === 'user' && m.content.trim())
+  // Extract up to 3 most recent customer messages.
+  const customerMessages = messages
+    .filter((m) => m.role === 'user')
+    .slice(-3)
+    .map((m) => m.content ?? '')
+    .filter((c) => c.trim().length > 0)
 
-  const replies =
-    replyCount === 0
-      ? 'without replying'
-      : `after ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`
+  let synopsis = ''
+  if (customerMessages.length > 0) {
+    const lastCustomer = customerMessages[customerMessages.length - 1]
+    const quote = truncate(lastCustomer.trim(), MAX_QUOTE_LEN)
+    synopsis = `Last customer message: “${quote}”`
+  }
 
-  const base = `🤖 AI agent handed off ${replies}.`
-
-  if (!lastCustomer) return base
-
-  const quote = truncate(lastCustomer.content.trim(), MAX_QUOTE_LEN)
-  return `${base} Last customer message: “${quote}”`
+  return [
+    `🤖 AI agent handed off after ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}.`,
+    synopsis,
+  ]
+    .filter(Boolean)
+    .join('\n')
 }
 
 function truncate(text: string, max: number): string {

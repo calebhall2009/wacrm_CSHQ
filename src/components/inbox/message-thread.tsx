@@ -632,6 +632,19 @@ export function MessageThread({
         .eq("id", conversation.id);
 
       onStatusChange(conversation.id, status);
+
+      // Auto-summarize when closing
+      if (status === "closed") {
+        try {
+          // We fire-and-forget this so it doesn't block the UI
+          fetch(`/api/conversations/${conversation.id}/summarize`, {
+            method: "POST",
+          }).catch(console.error);
+          toast.success("Generando resumen y sentimiento de venta en segundo plano...");
+        } catch (e) {
+          console.error("Failed to trigger summary:", e);
+        }
+      }
     },
     [conversation, onStatusChange]
   );

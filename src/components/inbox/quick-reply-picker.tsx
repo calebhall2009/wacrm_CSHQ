@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, MessageSquare, Zap } from "lucide-react";
+import { Loader2, MessageSquare, Zap, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Input } from "@/components/ui/input";
 
 import {
   Dialog,
@@ -31,6 +32,7 @@ export function QuickReplyPicker({
 }: QuickReplyPickerProps) {
   const t = useTranslations("Inbox.composer");
   const [items, setItems] = useState<QuickReply[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -59,7 +61,19 @@ export function QuickReplyPicker({
         <DialogHeader>
           <DialogTitle>{t("quickReplies")}</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="px-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t("quickRepliesSearch") || "Buscar..."}
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -70,7 +84,9 @@ export function QuickReplyPicker({
             </p>
           ) : (
             <ul className="flex flex-col gap-1">
-              {items.map((qr) => (
+              {items
+                .filter(qr => qr.title.toLowerCase().includes(search.toLowerCase()))
+                .map((qr) => (
                 <li key={qr.id}>
                   <button
                     type="button"

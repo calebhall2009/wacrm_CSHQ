@@ -63,6 +63,8 @@ export function WhatsAppConfig() {
   // again and overwrites whatever the user typed but hadn't saved yet.
   const loadedAccountIdRef = useRef<string | null>(null);
 
+  const [provider, setProvider] = useState<'meta' | 'telegram'>('meta');
+  const [telegramBotToken, setTelegramBotToken] = useState('');
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [wabaId, setWabaId] = useState('');
   const [accessToken, setAccessToken] = useState('');
@@ -115,17 +117,21 @@ export function WhatsAppConfig() {
 
       if (data) {
         setConfig(data);
+        setProvider(data.provider || 'meta');
         setPhoneNumberId(data.phone_number_id || '');
         setWabaId(data.waba_id || '');
         setAccessToken(MASKED_TOKEN);
+        setTelegramBotToken(data.telegram_bot_token ? MASKED_TOKEN : '');
         setVerifyToken('');
         setPin('');
         setTokenEdited(false);
       } else {
         setConfig(null);
+        setProvider('meta');
         setPhoneNumberId('');
         setWabaId('');
         setAccessToken('');
+        setTelegramBotToken('');
         setVerifyToken('');
         setPin('');
         setTokenEdited(false);
@@ -183,13 +189,20 @@ export function WhatsAppConfig() {
   }, [authLoading, profileLoading, user?.id, accountId, fetchConfig]);
 
   async function handleSave() {
-    if (!phoneNumberId.trim()) {
-      toast.error('Phone Number ID is required');
-      return;
-    }
-    if (!config && (!accessToken.trim() || !tokenEdited)) {
-      toast.error('Access Token is required for initial setup');
-      return;
+    if (provider === 'meta') {
+      if (!phoneNumberId.trim()) {
+        toast.error('Phone Number ID is required');
+        return;
+      }
+      if (!config && (!accessToken.trim() || !tokenEdited)) {
+        toast.error('Access Token is required for initial setup');
+        return;
+      }
+    } else {
+      if (!telegramBotToken.trim() || (!config?.telegram_bot_token && !tokenEdited)) {
+        toast.error('Telegram Bot Token is required');
+        return;
+      }
     }
 
     try {
@@ -200,25 +213,31 @@ export function WhatsAppConfig() {
       // and writing direct to Supabase stores the token in plaintext,
       // which then fails decryption on every subsequent health check.
       const payload: Record<string, unknown> = {
-        phone_number_id: phoneNumberId.trim(),
-        waba_id: wabaId.trim() || null,
-        verify_token: verifyToken.trim() || null,
-        // Optional — only sent when the user filled it in. The server
-        // requires it on first save or when changing numbers; for a
-        // simple token rotation, leaving it blank skips re-register.
-        pin: pin.trim() || null,
+        provider,
       };
 
-      if (tokenEdited && accessToken !== MASKED_TOKEN && accessToken.trim()) {
-        payload.access_token = accessToken.trim();
-      } else if (config) {
-        // Existing config — reuse stored encrypted token by decrypting on the
-        // server. But our POST handler requires an access_token to verify
-        // with Meta. If the user didn't change the token, we need to signal
-        // that. Simplest: require token re-entry if they're updating.
-        toast.error('Please re-enter the Access Token to save changes');
-        setSaving(false);
-        return;
+      if (provider === 'meta') {
+        payload.phone_number_id = phoneNumberId.trim();
+        payload.waba_id = wabaId.trim() || null;
+        payload.verify_token = verifyToken.trim() || null;
+        payload.pin = pin.trim() || null;
+
+        if (tokenEdited && accessToken !== MASKED_TOKEN && accessToken.trim()) {
+          payload.access_token = accessToken.trim();
+        } else if (config && config.provider === 'meta') {
+          toast.error('Please re-enter the Access Token to save changes');
+          setSaving(false);
+          return;
+        }
+      } else {
+        payload.phone_number_id = 'telegram_temp_id'; // placeholder
+        if (tokenEdited && telegramBotToken !== MASKED_TOKEN && telegramBotToken.trim()) {
+          payload.telegram_bot_token = telegramBotToken.trim();
+        } else if (config && config.provider === 'telegram') {
+          toast.error('Please re-enter the Telegram Bot Token to save changes');
+          setSaving(false);
+          return;
+        }
       }
 
       const res = await fetch('/api/whatsapp/config', {
@@ -445,11 +464,35 @@ export function WhatsAppConfig() {
           </div>
           <AlertDescription className="text-muted-foreground">
             {connectionStatus === 'connected'
-              ? t('connectedDesc')
+              ? (provider === 'meta' ? t('connectedDesc') : 'Telegram Bot is connected.')
               : statusMessage ||
                 t('notConnectedDesc')}
           </AlertDescription>
         </Alert>
+
+        {/* Provider Tabs */}
+        <div className="flex gap-2 p-1 bg-muted rounded-md mb-6 w-full max-w-sm">
+          <button
+            onClick={() => setProvider('meta')}
+            className={`flex-1 text-sm font-medium py-1.5 px-3 rounded ${
+              provider === 'meta'
+                ? 'bg-background shadow text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Meta Cloud API
+          </button>
+          <button
+            onClick={() => setProvider('telegram')}
+            className={`flex-1 text-sm font-medium py-1.5 px-3 rounded ${
+              provider === 'telegram'
+                ? 'bg-background shadow text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Telegram
+          </button>
+        </div>
 
         {/* Registration Status — the "is it actually live?" check.
             Credentials being valid is necessary but not sufficient;
@@ -554,7 +597,46 @@ export function WhatsAppConfig() {
           </Alert>
         )}
 
-        {/* API Credentials */}
+        {provider === 'telegram' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-foreground">Telegram Configuration</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Connect a Telegram bot created via @BotFather to handle incoming and outgoing messages locally.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Telegram Bot Token</Label>
+                <div className="relative">
+                  <Input
+                    type={showToken ? 'text' : 'password'}
+                    placeholder="e.g. 123456789:ABCdefGHIjklmNOPqrstUVWxyz"
+                    value={telegramBotToken}
+                    onChange={(e) => {
+                      setTelegramBotToken(e.target.value);
+                      setTokenEdited(true);
+                    }}
+                    onFocus={() => {
+                      if (telegramBotToken === MASKED_TOKEN) {
+                        setTelegramBotToken('');
+                        setTokenEdited(true);
+                      }
+                    }}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
         <Card>
           <CardHeader>
             <CardTitle className="text-foreground">{t('apiCredentialsTitle')}</CardTitle>
@@ -652,8 +734,9 @@ export function WhatsAppConfig() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Webhook URL */}
+        )}
+        {/* Webhook Configuration - Hidden for Telegram because it's automatic */}
+        {provider === 'meta' && (
         <Card>
           <CardHeader>
             <CardTitle className="text-foreground">{t('webhookTitle')}</CardTitle>
@@ -682,6 +765,7 @@ export function WhatsAppConfig() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">

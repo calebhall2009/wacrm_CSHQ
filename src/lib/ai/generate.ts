@@ -18,6 +18,8 @@ export interface GenerateArgs {
   messages: ChatMessage[]
 }
 
+import { AI_TOOLS } from './tools'
+
 /**
  * Generate the next reply from the account's configured provider.
  * Dispatches to the right adapter, then parses the handoff sentinel out
@@ -32,9 +34,10 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
     systemPrompt,
     messages,
     timeoutMs,
+    tools: AI_TOOLS,
   }
 
-  let result: { text: string; usage: AiUsage | null }
+  let result: { text: string; usage: AiUsage | null; tool_calls?: any[] }
   switch (config.provider) {
     case 'openai':
       result = await generateOpenAi(providerArgs)
@@ -52,7 +55,11 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
       })
   }
 
-  return parseGeneration(result.text, result.usage)
+  const parsed = parseGeneration(result.text, result.usage)
+  return {
+    ...parsed,
+    tool_calls: result.tool_calls,
+  }
 }
 
 /**

@@ -21,6 +21,10 @@ export interface AiConfig {
   isActive: boolean
   autoReplyEnabled: boolean
   autoReplyMaxPerConversation: number
+  fallbackEnabled: boolean
+  fallbackProvider: AiProvider | null
+  fallbackModel: string | null
+  fallbackApiKey: string | null
   /** Where auto-reply hands a conversation off when the model bails: an
    *  agent's `auth.users.id`, or null to leave it unassigned (drop into
    *  the shared queue). */
@@ -33,8 +37,18 @@ export interface AiConfig {
 
 /** A single conversation turn in the shape both providers accept. */
 export interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
+  role: 'user' | 'assistant' | 'tool'
+  content: string | null
+  tool_calls?: {
+    id: string
+    type: 'function'
+    function: {
+      name: string
+      arguments: string
+    }
+  }[]
+  tool_call_id?: string
+  name?: string
 }
 
 /**
@@ -52,6 +66,14 @@ export interface AiUsage {
 export interface ProviderResult {
   text: string
   usage: AiUsage | null
+  tool_calls?: {
+    id: string
+    type: 'function'
+    function: {
+      name: string
+      arguments: string
+    }
+  }[]
 }
 
 /** Outcome of a generation call. */
@@ -64,6 +86,15 @@ export interface GenerateResult {
   scheduleDate: string | null
   /** Provider token usage for this call, or null when unavailable. */
   usage: AiUsage | null
+  /** Optional tool calls requested by the model. */
+  tool_calls?: {
+    id: string
+    type: 'function'
+    function: {
+      name: string
+      arguments: string
+    }
+  }[]
 }
 
 /**

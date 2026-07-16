@@ -42,7 +42,7 @@ export async function POST(request: Request) {
           ((m as ChatMessage).role === 'user' ||
             (m as ChatMessage).role === 'assistant') &&
           typeof (m as ChatMessage).content === 'string' &&
-          (m as ChatMessage).content.trim().length > 0,
+          ((m as ChatMessage).content || '').trim().length > 0,
       )
       .slice(-MAX_TURNS)
 

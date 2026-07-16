@@ -44,6 +44,7 @@ import {
 } from '@/lib/whatsapp/phone-utils';
 import type { MessageTemplate } from '@/types';
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
+import { sendTelegramMessage } from '@/lib/telegram/telegram-api';
 
 export const MEDIA_KINDS = ['image', 'video', 'document', 'audio'] as const;
 export const VALID_MESSAGE_TYPES = [
@@ -262,10 +263,10 @@ export async function sendMessageToConversation(
     );
   }
 
-  const accessToken = decrypt(config.access_token);
+  const accessToken = config.access_token ? decrypt(config.access_token) : '';
 
   // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
-  if (isLegacyFormat(config.access_token)) {
+  if (config.access_token && isLegacyFormat(config.access_token)) {
     void db
       .from('whatsapp_config')
       .update({ access_token: encrypt(accessToken) })
@@ -330,9 +331,15 @@ export async function sendMessageToConversation(
   }
 
   const attempt = async (phone: string): Promise<string> => {
+    if (config.provider === 'telegram') {
+      const telegramToken = decrypt(config.telegram_bot_token || '');
+      const result = await sendTelegramMessage(telegramToken, phone, contentText || '[Unsupported Message Type]');
+      return result.messageId;
+    }
+
     if (messageType === 'template') {
       const result = await sendTemplateMessage({
-        phoneNumberId: config.phone_number_id,
+        phoneNumberId: config.phone_number_id!,
         accessToken,
         to: phone,
         templateName: templateName!,
@@ -346,7 +353,7 @@ export async function sendMessageToConversation(
     }
     if (isMediaKind) {
       const result = await sendMediaMessage({
-        phoneNumberId: config.phone_number_id,
+        phoneNumberId: config.phone_number_id!,
         accessToken,
         to: phone,
         kind: messageType as MediaKind,
@@ -361,7 +368,7 @@ export async function sendMessageToConversation(
       const p = interactivePayload!;
       if (p.kind === 'buttons') {
         const result = await sendInteractiveButtons({
-          phoneNumberId: config.phone_number_id,
+          phoneNumberId: config.phone_number_id!,
           accessToken,
           to: phone,
           bodyText: p.body,
@@ -373,7 +380,7 @@ export async function sendMessageToConversation(
         return result.messageId;
       }
       const result = await sendInteractiveList({
-        phoneNumberId: config.phone_number_id,
+        phoneNumberId: config.phone_number_id!,
         accessToken,
         to: phone,
         bodyText: p.body,
@@ -386,7 +393,7 @@ export async function sendMessageToConversation(
       return result.messageId;
     }
     const result = await sendTextMessage({
-      phoneNumberId: config.phone_number_id,
+      phoneNumberId: config.phone_number_id!,
       accessToken,
       to: phone,
       text: contentText!,

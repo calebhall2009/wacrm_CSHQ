@@ -10,6 +10,8 @@ export interface ProviderArgs {
   systemPrompt: string
   messages: ChatMessage[]
   timeoutMs: number
+  tools?: any[]
+  baseURL?: string
 }
 
 /**
@@ -99,10 +101,11 @@ export function mergeConsecutive(messages: ChatMessage[]): ChatMessage[] {
   const out: ChatMessage[] = []
   for (const m of messages) {
     const last = out[out.length - 1]
-    if (last && last.role === m.role) {
+    const canMerge = last && last.role === m.role && !last.tool_calls && !m.tool_calls && !last.tool_call_id && !m.tool_call_id
+    if (canMerge) {
       last.content = `${last.content}\n\n${m.content}`
     } else {
-      out.push({ role: m.role, content: m.content })
+      out.push({ ...m })
     }
   }
   return out

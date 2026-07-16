@@ -58,7 +58,7 @@ async function processTelegramWebhook(update: any) {
   const userId = config.user_id
 
   // Find or Create Contact (using chat ID as phone)
-  let contactRecord = await findExistingContact(supabaseAdmin(), accountId, chatId)
+  let contactRecord: any = await findExistingContact(supabaseAdmin(), accountId, chatId)
   
   if (!contactRecord) {
     const { data: newContact, error } = await supabaseAdmin()
@@ -155,7 +155,8 @@ async function processTelegramWebhook(update: any) {
     userId: userId,
     conversationId: conversation.id,
     contactId: contactRecord.id,
-    inboundText: text,
+    message: text,
+    isFirstInboundMessage: false // or whatever logic you prefer
   }).catch((err) => {
     console.error('[telegram flows] dispatch failed:', err)
     return { consumed: false }
@@ -163,10 +164,14 @@ async function processTelegramWebhook(update: any) {
   const flowConsumed = flowResult?.consumed ?? false
 
   // 2. Automations
-  await runAutomationsForTrigger(accountId, 'message_received', {
-    contact_id: contactRecord.id,
-    message_type: 'text',
-    message_text: text,
+  await runAutomationsForTrigger({
+    accountId,
+    triggerType: 'new_message_received',
+    contactId: contactRecord.id,
+    context: {
+      message_text: text,
+      conversation_id: conversation.id,
+    }
   }).catch((err) => console.error('[telegram automations] dispatch failed:', err))
 
   // 3. AI auto-reply (Runs if flows didn't consume the message)
@@ -174,6 +179,8 @@ async function processTelegramWebhook(update: any) {
     await dispatchInboundToAiReply({
       accountId,
       conversationId: conversation.id,
+      contactId: contactRecord.id,
+      configOwnerUserId: userId,
     }).catch((err) => console.error('[telegram ai] dispatch failed:', err))
   }
 }

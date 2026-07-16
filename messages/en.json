@@ -1669,7 +1669,11 @@
       "saveSuccess": "AI assistant saved.",
       "saveFailed": "Failed to save.",
       "removeSuccess": "AI configuration removed.",
-      "removeFailed": "Failed to remove."
+      "removeFailed": "Failed to remove.",
+      "fallbackTitle": "Fallback Agent",
+      "fallbackDesc": "Configure a secondary model that will automatically reply if the main one fails (e.g. if the service goes down or exhausts its rate limit).",
+      "enableFallback": "Enable Fallback",
+      "enableFallbackDesc": "Turn this on to use a secondary model as a safety net."
     },
     "aiKnowledge": {
       "loadFailed": "Failed to load knowledge base",

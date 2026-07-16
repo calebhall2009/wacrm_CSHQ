@@ -3,7 +3,6 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { engineSendText } from '@/lib/flows/meta-send'
 
-// This endpoint should ideally be protected by a CRON secret in a real production app.
 export async function GET(req: Request) {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -18,70 +17,73 @@ export async function GET(req: Request) {
   )
 
   const now = new Date()
-  const tomorrowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000).toISOString()
-  const tomorrowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000).toISOString()
+  
+  // To use the free 24-hour window, we look for conversations where the last message 
+  // was between 23 and 23.5 hours ago. (This cron should run every 30 minutes).
+  const windowStart = new Date(now.getTime() - 23.5 * 60 * 60 * 1000).toISOString()
+  const windowEnd = new Date(now.getTime() - 23 * 60 * 60 * 1000).toISOString()
 
-  // Find appointments roughly 24 hours from now
-  const { data: appointments, error: queryErr } = await supabase
-    .from('appointments')
-    .select('*, contacts(id, phone)')
-    .gte('date', tomorrowStart)
-    .lte('date', tomorrowEnd)
-    .eq('status', 'confirmed')
+  // Find conversations closing soon
+  const { data: conversations, error: queryErr } = await supabase
+    .from('conversations')
+    .select('id, contact_id, account_id, last_message_at')
+    .gte('last_message_at', windowStart)
+    .lte('last_message_at', windowEnd)
 
   if (queryErr) {
-    if (queryErr.code === '42P01') {
-      return NextResponse.json({ message: 'Table does not exist yet' }, { status: 200 })
-    }
     return NextResponse.json({ error: queryErr.message }, { status: 500 })
   }
 
   let sent = 0
-  for (const appt of appointments) {
-    if (!appt.contact_id) continue
+  for (const conv of conversations) {
+    if (!conv.contact_id) continue
 
     try {
-      // Find a conversation for this contact
-      const { data: conv } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('contact_id', appt.contact_id)
-        .order('updated_at', { ascending: false })
+      // Check if this contact has an upcoming appointment in the future
+      const { data: upcomingAppts } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('contact_id', conv.contact_id)
+        .gte('start_time', now.toISOString())
+        .eq('status', 'scheduled')
+        .order('start_time', { ascending: true })
         .limit(1)
-        .single()
+
+      if (!upcomingAppts || upcomingAppts.length === 0) continue
       
-      if (!conv) continue
+      const appt = upcomingAppts[0]
 
       // Find an owner for this account to use as the sending user
       const { data: member } = await supabase
         .from('profiles')
         .select('user_id')
-        .eq('account_id', appt.account_id)
+        .eq('account_id', conv.account_id)
         .limit(1)
         .single()
 
       if (!member) continue
 
-      const timeString = new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      const text = `¡Hola! Te recordamos que tienes una cita programada para mañana a las ${timeString}: "${appt.title}". ¡Te esperamos!`
+      const dateString = new Date(appt.start_time).toLocaleDateString()
+      const timeString = new Date(appt.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const text = `¡Hola! Aprovechamos para recordarte que tienes una cita programada para el ${dateString} a las ${timeString}: "${appt.title}". ¡Te esperamos!`
 
       await engineSendText({
-        accountId: appt.account_id,
+        accountId: conv.account_id,
         userId: member.user_id,
         conversationId: conv.id,
-        contactId: appt.contact_id,
+        contactId: conv.contact_id,
         text,
         aiGenerated: false
       })
       sent++
     } catch (e) {
-      console.error('Error sending reminder for appt:', appt.id, e)
+      console.error('Error sending reminder for conv:', conv.id, e)
     }
   }
 
   return NextResponse.json({ 
-    message: 'Reminders processed', 
-    count: appointments.length, 
+    message: 'Window-based reminders processed', 
+    count: conversations.length, 
     sent 
   })
 }

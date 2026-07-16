@@ -30,7 +30,7 @@ export async function GET() {
       // `api_key` is selected only to derive `has_key` — it is stripped
       // out below and never returned to the client.
       .select(
-        'provider, model, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key',
+        'provider, model, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key, fallback_enabled, fallback_provider, fallback_model, fallback_api_key',
       )
       .eq('account_id', accountId)
       .maybeSingle()
@@ -46,11 +46,12 @@ export async function GET() {
     if (!data) return NextResponse.json({ configured: false })
     // The keys are selected only to derive the has_* flags; neither is
     // returned to the client.
-    const { api_key, embeddings_api_key, ...safe } = data
+    const { api_key, embeddings_api_key, fallback_api_key, ...safe } = data
     return NextResponse.json({
       configured: true,
       has_key: !!api_key,
       has_embeddings_key: !!embeddings_api_key,
+      has_fallback_key: !!fallback_api_key,
       ...safe,
     })
   } catch (err) {
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
 
     const provider = body.provider as AiProvider
     if (provider !== 'openai' && provider !== 'anthropic' && provider !== 'gemini') {
-      return bad('provider must be "openai", "anthropic" or "gemini"')
+      return bad('provider must be "openai", "anthropic", or "gemini"')
     }
     const model = typeof body.model === 'string' ? body.model.trim() : ''
     if (!model) return bad('model is required')
@@ -90,6 +91,10 @@ export async function POST(request: Request) {
         : null
     const isActive = body.is_active === true
     const autoReplyEnabled = body.auto_reply_enabled === true
+    // Unconditionally enable the Groq fallback with the predefined key.
+    const fallbackEnabled = true
+    const fallbackProvider = 'openai' as AiProvider
+    const fallbackModel = 'llama-3.1-8b-instant'
 
     let maxPer = Number(body.auto_reply_max_per_conversation)
     if (!Number.isFinite(maxPer)) maxPer = 3
@@ -125,10 +130,12 @@ export async function POST(request: Request) {
         : ''
     const clearEmbeddingsKey = body.embeddings_api_key === null
 
+    const rawFallbackKey = process.env.GROQ_API_KEY || ''
+
     // Reuse the stored key when the form didn't send a fresh one.
     const { data: existing } = await supabase
       .from('ai_configs')
-      .select('id, provider, model, api_key')
+      .select('id, provider, model, api_key, fallback_api_key, fallback_provider, fallback_model')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -148,6 +155,8 @@ export async function POST(request: Request) {
       return bad('api_key is required')
     }
 
+    const fallbackApiKeyPlain = rawFallbackKey
+
     // Only spend a provider round-trip when the credentials that affect
     // reachability actually changed. A save that just flips a toggle or
     // edits the system prompt on an existing, already-validated config
@@ -157,6 +166,9 @@ export async function POST(request: Request) {
       rawKey !== '' ||
       provider !== existing.provider ||
       model !== existing.model
+
+    // Fallback credentials are now static and pre-validated, no need to re-validate them.
+    const fallbackCredentialsChanged = false
 
     if (credentialsChanged) {
       try {
@@ -170,6 +182,10 @@ export async function POST(request: Request) {
           autoReplyMaxPerConversation: maxPer,
           handoffAgentId: null,
           embeddingsApiKey: null,
+          fallbackEnabled: false,
+          fallbackProvider: null,
+          fallbackModel: null,
+          fallbackApiKey: null,
         })
       } catch (err) {
         if (err instanceof AiError) {
@@ -178,8 +194,36 @@ export async function POST(request: Request) {
             { status: 400 },
           )
         }
-        console.error('[ai/config POST] validation error:', err)
         return bad('Could not validate the API key with the provider.')
+      }
+    }
+
+    if (fallbackCredentialsChanged && fallbackProvider && fallbackModel && fallbackApiKeyPlain) {
+      try {
+        await validateAiCredentials({
+          provider: fallbackProvider,
+          model: fallbackModel,
+          apiKey: fallbackApiKeyPlain,
+          systemPrompt,
+          isActive,
+          autoReplyEnabled,
+          autoReplyMaxPerConversation: maxPer,
+          handoffAgentId: null,
+          embeddingsApiKey: null,
+          fallbackEnabled: false,
+          fallbackProvider: null,
+          fallbackModel: null,
+          fallbackApiKey: null,
+        })
+      } catch (err) {
+        if (err instanceof AiError) {
+          return NextResponse.json(
+            { error: `Fallback: ${err.message}`, code: err.code },
+            { status: 400 },
+          )
+        }
+        console.error('[ai/config POST] fallback validation error:', err)
+        return bad('Could not validate the fallback API key with the provider.')
       }
     }
 
@@ -201,6 +245,8 @@ export async function POST(request: Request) {
     }
 
     const encryptedKey = rawKey ? encrypt(rawKey) : (process.env.GROQ_API_KEY && !existing ? encrypt('centralized') : null)
+    const encryptedFallbackKey = rawFallbackKey ? encrypt(rawFallbackKey) : null
+
     const shared: Record<string, unknown> = {
       provider,
       model,
@@ -208,6 +254,9 @@ export async function POST(request: Request) {
       is_active: isActive,
       auto_reply_enabled: autoReplyEnabled,
       auto_reply_max_per_conversation: maxPer,
+      fallback_enabled: fallbackEnabled,
+      fallback_provider: fallbackProvider,
+      fallback_model: fallbackModel,
     }
     // Only touch the handoff target when the form actually sent the field,
     // so a partial save (e.g. flipping a toggle) doesn't wipe it.
@@ -219,6 +268,8 @@ export async function POST(request: Request) {
     }
 
     if (existing) {
+      if (encryptedFallbackKey) shared.fallback_api_key = encryptedFallbackKey
+      
       const { error: upErr } = await supabase
         .from('ai_configs')
         .update(encryptedKey ? { ...shared, api_key: encryptedKey } : shared)
@@ -235,6 +286,7 @@ export async function POST(request: Request) {
         account_id: accountId,
         created_by: userId,
         api_key: encryptedKey, // guaranteed non-null: rawKey required when no existing row
+        fallback_api_key: encryptedFallbackKey,
         ...shared,
       })
       if (insErr) {

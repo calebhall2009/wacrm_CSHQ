@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import type { Contact, Deal, ContactNote, Tag } from "@/types";
+import type { Contact, Deal, ContactNote, Tag, Conversation } from "@/types";
 import {
   Phone,
   Mail,
@@ -23,9 +23,10 @@ import { useTranslations } from "next-intl";
 
 interface ContactSidebarProps {
   contact: Contact | null;
+  conversation?: Conversation | null;
 }
 
-export function ContactSidebar({ contact }: ContactSidebarProps) {
+export function ContactSidebar({ contact, conversation }: ContactSidebarProps) {
   const tSidebar = useTranslations("Inbox.sidebar");
   const tThread = useTranslations("Inbox.messageThread");
 
@@ -180,6 +181,33 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
           {/* Divider */}
           <div className="my-4 border-t border-border" />
+
+          {/* AI Summary */}
+          {(conversation?.summary || conversation?.sentiment) && (
+            <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[10px]">
+                  ✨
+                </span>
+                <span className="text-xs font-semibold text-primary">IA Resumen</span>
+                {conversation.sentiment && (
+                  <span className={cn(
+                    "ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                    conversation.sentiment.toLowerCase() === "caliente" ? "bg-red-500/20 text-red-600" :
+                    conversation.sentiment.toLowerCase() === "tibio" ? "bg-yellow-500/20 text-yellow-600" :
+                    "bg-blue-500/20 text-blue-600"
+                  )}>
+                    {conversation.sentiment}
+                  </span>
+                )}
+              </div>
+              {conversation.summary && (
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {conversation.summary}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Tags */}
           <div>

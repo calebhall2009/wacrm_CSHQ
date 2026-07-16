@@ -79,7 +79,7 @@ export function QuickRepliesManager() {
   const save = useCallback(async () => {
     if (!draft) return;
     if (!draft.title.trim()) {
-      toast.error("Give the quick reply a name.");
+      toast.error("Dale un nombre a la respuesta rápida.");
       return;
     }
     const payload =
@@ -99,14 +99,14 @@ export function QuickRepliesManager() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error ?? "Couldn't save the quick reply.");
+        toast.error(data.error ?? "No se pudo guardar la respuesta rápida.");
         return;
       }
-      toast.success(draft.id ? "Quick reply updated." : "Quick reply created.");
+      toast.success(draft.id ? "Respuesta rápida actualizada." : "Respuesta rápida creada.");
       setDraft(null);
       await load();
     } catch {
-      toast.error("Couldn't save the quick reply.");
+      toast.error("No se pudo guardar la respuesta rápida.");
     } finally {
       setSaving(false);
     }
@@ -114,10 +114,10 @@ export function QuickRepliesManager() {
 
   const remove = useCallback(
     async (id: string) => {
-      if (!window.confirm("Delete this quick reply?")) return;
+      if (!window.confirm("¿Eliminar esta respuesta rápida?")) return;
       const res = await fetch(`/api/quick-replies/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        toast.error("Couldn't delete the quick reply.");
+        toast.error("No se pudo eliminar la respuesta rápida.");
         return;
       }
       await load();

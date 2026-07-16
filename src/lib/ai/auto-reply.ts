@@ -112,28 +112,68 @@ export async function dispatchInboundToAiReply(
       knowledge,
     })
 
-    const { text, handoff, scheduleDate, usage } = await generateReply({
-      config,
-      systemPrompt,
-      messages,
-    })
+    let currentMessages = [...messages]
+    let loopCount = 0
+    let finalGenerateResult = null
 
-    if (scheduleDate) {
+    // We need to import dispatchToolCall at the top. Let's assume it's imported or we'll add the import later.
+    const { dispatchToolCall } = await import('./tool-dispatcher')
+
+    while (loopCount < 5) {
+      loopCount++
+      let genRes
       try {
-        const { error: insertErr } = await db.from('appointments').insert({
-          account_id: accountId,
-          contact_id: contactId,
-          title: 'Cita agendada (IA)',
-          date: new Date(scheduleDate).toISOString(),
-          status: 'confirmed'
+        genRes = await generateReply({
+          config,
+          systemPrompt,
+          messages: currentMessages,
         })
-        if (insertErr) {
-          console.error('[ai auto-reply] failed to schedule appointment:', insertErr)
+      } catch (err) {
+        if (config.fallbackEnabled && config.fallbackProvider && config.fallbackApiKey) {
+          console.log(`[ai fallback] primary failed, falling back to ${config.fallbackProvider}`)
+          config.provider = config.fallbackProvider
+          config.model = config.fallbackModel || config.model
+          config.apiKey = config.fallbackApiKey
+          // Disable fallback for subsequent iterations to avoid infinite loop on fallback failure
+          config.fallbackEnabled = false 
+          
+          genRes = await generateReply({
+            config,
+            systemPrompt,
+            messages: currentMessages,
+          })
+        } else {
+          throw err
         }
-      } catch (e) {
-        console.error('[ai auto-reply] invalid date format from AI:', scheduleDate)
+      }
+      finalGenerateResult = genRes
+
+      if (genRes.tool_calls && genRes.tool_calls.length > 0) {
+        currentMessages.push({ 
+          role: 'assistant', 
+          content: genRes.text || null, 
+          tool_calls: genRes.tool_calls 
+        })
+        
+        for (const tc of genRes.tool_calls) {
+          const resultStr = await dispatchToolCall(db, accountId, contactId, {
+            name: tc.function.name,
+            arguments: tc.function.arguments
+          })
+          currentMessages.push({ 
+            role: 'tool', 
+            content: resultStr, 
+            tool_call_id: tc.id, 
+            name: tc.function.name 
+          })
+        }
+      } else {
+        break
       }
     }
+
+    if (!finalGenerateResult) return
+    const { text, handoff, usage } = finalGenerateResult
 
     // Record token spend on the account's BYO key. Fire-and-forget so it
     // never adds latency to the customer-facing send: `logAiUsage`

@@ -12,10 +12,14 @@ interface AiConfigRow {
   auto_reply_max_per_conversation: number
   handoff_agent_id: string | null
   embeddings_api_key: string | null
+  fallback_enabled: boolean
+  fallback_provider: string | null
+  fallback_model: string | null
+  fallback_api_key: string | null
 }
 
 const CONFIG_COLUMNS =
-  'provider, model, api_key, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, embeddings_api_key'
+  'provider, model, api_key, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, embeddings_api_key, fallback_enabled, fallback_provider, fallback_model, fallback_api_key'
 
 /**
  * Load and decrypt the account's AI config for *use* (draft or
@@ -83,6 +87,10 @@ export async function loadAiConfig(
     autoReplyMaxPerConversation: row.auto_reply_max_per_conversation,
     handoffAgentId: row.handoff_agent_id,
     embeddingsApiKey,
+    fallbackEnabled: row.fallback_enabled,
+    fallbackProvider: (row.fallback_provider as any) || null,
+    fallbackModel: row.fallback_model || null,
+    fallbackApiKey: row.fallback_api_key ? decrypt(row.fallback_api_key) : null,
   }
 }
 

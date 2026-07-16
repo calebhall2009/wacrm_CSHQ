@@ -357,6 +357,7 @@ export function AiConfig() {
           </CardContent>
         </Card>
 
+
         <AiKnowledgeCard
           accountId={accountId}
           canEdit={canEdit}

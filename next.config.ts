@@ -65,6 +65,7 @@ const SECURITY_HEADERS = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['dfed-2800-bf0-bf7c-3004-d889-26ca-70f3-fafe.ngrok-free.app'],
   /**
    * Cache-Control policy.
    *

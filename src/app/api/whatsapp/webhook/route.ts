@@ -666,6 +666,22 @@ async function processMessage(
     .eq('sender_type', 'customer')
   const isFirstInboundMessage = (priorCustomerMsgCount ?? 0) === 0
 
+  // Deduplicate: Meta guarantees at-least-once delivery. If the server
+  // is slow or a network hiccup occurs, Meta may replay the webhook.
+  // message_id is NOT globally unique (repeats across accounts), but it
+  // IS unique within a single conversation thread.
+  const { data: existingMessage } = await supabaseAdmin()
+    .from('messages')
+    .select('id')
+    .eq('conversation_id', conversation.id)
+    .eq('message_id', message.id)
+    .maybeSingle()
+
+  if (existingMessage) {
+    console.warn(`[webhook] duplicate message dropped: ${message.id} in conversation ${conversation.id}`)
+    return
+  }
+
   const { error: msgError } = await supabaseAdmin().from('messages').insert({
     conversation_id: conversation.id,
     sender_type: 'customer',
@@ -781,7 +797,7 @@ async function processMessage(
   // listens to only one trigger runs only when that trigger matches.
   if (contactOutcome.wasCreated) automationTriggers.unshift('new_contact_created')
   if (isFirstInboundMessage) automationTriggers.unshift('first_inbound_message')
-  for (const triggerType of automationTriggers) {
+  const automationPromises = automationTriggers.map(triggerType => 
     runAutomationsForTrigger({
       accountId,
       triggerType,
@@ -794,7 +810,8 @@ async function processMessage(
         interactive_reply_id: interactiveReplyId ?? undefined,
       },
     }).catch((err) => console.error('[automations] dispatch failed:', err))
-  }
+  )
+  await Promise.all(automationPromises)
 
   // AI auto-reply. Runs only for plain-text inbound the deterministic
   // flow runner did NOT consume (flows win over the LLM), and only when

@@ -186,9 +186,9 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
       >
         {/* Logo row. On mobile we put a close button here; on desktop the
             close button is hidden since the sidebar is always-visible. */}
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
-          <Link href="/dashboard" className="relative flex h-full w-full items-center overflow-hidden">
-            <img src="/logo.png" alt="HallTech Logo" className="absolute top-1/2 left-0 -translate-y-1/2 w-48 max-w-none object-contain" />
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4 bg-card/50">
+          <Link href="/dashboard" className="relative flex h-full w-full items-center overflow-visible group">
+            <img src="/logo.png" alt="Ecuasapp Logo" className="w-auto h-8 max-w-none object-contain origin-left transition-transform duration-300 group-hover:scale-105 drop-shadow-sm" />
           </Link>
           <button
             type="button"

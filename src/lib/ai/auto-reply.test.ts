@@ -77,6 +77,10 @@ function aiConfig(overrides: Partial<AiConfig> = {}): AiConfig {
     autoReplyMaxPerConversation: 3,
     handoffAgentId: null,
     embeddingsApiKey: null,
+    fallbackEnabled: false,
+    fallbackProvider: null,
+    fallbackModel: null,
+    fallbackApiKey: null,
     ...overrides,
   }
 }

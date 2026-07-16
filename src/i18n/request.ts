@@ -1,8 +1,7 @@
 import { getRequestConfig } from 'next-intl/server';
 
 export default getRequestConfig(async () => {
-  // Read the locale from the environment, defaulting to 'es'
-  const locale = process.env.NEXT_PUBLIC_APP_LOCALE || 'es';
+  const locale = 'es';
 
   let messages;
   try {

@@ -181,6 +181,8 @@ export interface Conversation {
   ai_autoreply_disabled?: boolean;
   ai_reply_count?: number;
   ai_handoff_summary?: string | null;
+  summary?: string | null;
+  sentiment?: string | null;
 }
 
 // ============================================================
@@ -269,10 +271,12 @@ export interface MessageReaction {
 export interface WhatsAppConfig {
   id: string;
   user_id: string;
-  phone_number_id: string;
+  provider: 'meta' | 'telegram';
+  phone_number_id?: string;
   waba_id?: string;
-  access_token: string;
+  access_token?: string;
   verify_token?: string;
+  telegram_bot_token?: string;
   status: 'connected' | 'disconnected';
   connected_at?: string;
   /**

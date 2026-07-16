@@ -241,9 +241,12 @@ export function MessageComposer({
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
+      } else if (e.key === "/" && text.trim() === "") {
+        e.preventDefault();
+        setQuickReplyOpen(true);
       }
     },
-    [handleSend]
+    [handleSend, text]
   );
 
   const handleChange = useCallback(
